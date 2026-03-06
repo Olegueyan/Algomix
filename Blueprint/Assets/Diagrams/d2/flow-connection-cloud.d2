@@ -1,0 +1,105 @@
+"Paramètres": {
+  shape: rectangle
+  style: {
+    fill: "#e7f7f4"
+    stroke: "#0f766e"
+    font-color: "#115e59"
+    border-radius: 8
+  }
+}
+
+"Saisir identifiants": {
+  shape: hexagon
+  style: {
+    fill: "#e8f1ff"
+    stroke: "#2563eb"
+    font-color: "#1e3a8a"
+  }
+}
+
+"Valider connexion": {
+  shape: hexagon
+  style: {
+    fill: "#fff2e8"
+    stroke: "#ea580c"
+    font-color: "#9a3412"
+  }
+}
+
+"Authentification valide ?": {
+  shape: diamond
+  style: {
+    fill: "#fef9c3"
+    stroke: "#ca8a04"
+    font-color: "#713f12"
+  }
+}
+
+"Session cloud": {
+  shape: cylinder
+  style: {
+    fill: "#eefce8"
+    stroke: "#16a34a"
+    font-color: "#166534"
+  }
+}
+
+"Récupérer données": {
+  shape: hexagon
+  style: {
+    fill: "#f3f0ff"
+    stroke: "#7c3aed"
+    font-color: "#5b21b6"
+  }
+}
+
+"Vider le cloud": {
+  shape: hexagon
+  style: {
+    fill: "#fff1f2"
+    stroke: "#e11d48"
+    font-color: "#9f1239"
+  }
+}
+
+"Changer mot de passe": {
+  shape: hexagon
+  style: {
+    fill: "#fff7ed"
+    stroke: "#f97316"
+    font-color: "#9a3412"
+  }
+}
+
+"Backend cloud": {
+  shape: cloud
+  style: {
+    fill: "#eef2f7"
+    stroke: "#64748b"
+    font-color: "#334155"
+  }
+}
+
+"Retour utilisateur": {
+  shape: rectangle
+  style: {
+    fill: "#f8fafc"
+    stroke: "#94a3b8"
+    font-color: "#334155"
+    border-radius: 8
+  }
+}
+
+"Paramètres" -> "Saisir identifiants": "Se connecter / créer un compte"
+"Saisir identifiants" -> "Valider connexion": "Email + mot de passe"
+"Valider connexion" -> "Authentification valide ?"
+"Authentification valide ?" -> "Saisir identifiants": "Non"
+"Authentification valide ?" -> "Session cloud": "Oui"
+"Session cloud" -> "Récupérer données": "Action récupérer"
+"Session cloud" -> "Vider le cloud": "Action vider"
+"Session cloud" -> "Changer mot de passe": "Action mot de passe"
+"Récupérer données" -> "Backend cloud": "GET"
+"Vider le cloud" -> "Backend cloud": "DELETE"
+"Changer mot de passe" -> "Backend cloud": "PATCH"
+"Backend cloud" -> "Retour utilisateur": "Résultat"
+"Retour utilisateur" -> "Paramètres": "Fermer"

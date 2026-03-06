@@ -1,0 +1,82 @@
+"Démarrage application": {
+  shape: hexagon
+  style: {
+    fill: "#fff2e8"
+    stroke: "#ea580c"
+    font-color: "#9a3412"
+  }
+}
+
+"Cache local": {
+  shape: cylinder
+  style: {
+    fill: "#e7f7f4"
+    stroke: "#0f766e"
+    font-color: "#115e59"
+  }
+}
+
+"Cache disponible ?": {
+  shape: diamond
+  style: {
+    fill: "#fef9c3"
+    stroke: "#ca8a04"
+    font-color: "#713f12"
+  }
+}
+
+"Restaurer session": {
+  shape: hexagon
+  style: {
+    fill: "#eefce8"
+    stroke: "#16a34a"
+    font-color: "#166534"
+  }
+}
+
+"Accueil prêt": {
+  shape: rectangle
+  style: {
+    fill: "#e8f1ff"
+    stroke: "#2563eb"
+    font-color: "#1e3a8a"
+    border-radius: 8
+  }
+}
+
+"Action utilisateur": {
+  shape: hexagon
+  style: {
+    fill: "#f6eaff"
+    stroke: "#9333ea"
+    font-color: "#6b21a8"
+  }
+}
+
+"Mettre à jour état": {
+  shape: hexagon
+  style: {
+    fill: "#fff7ed"
+    stroke: "#f97316"
+    font-color: "#9a3412"
+  }
+}
+
+"Écrire cache": {
+  shape: hexagon
+  style: {
+    fill: "#fff1f2"
+    stroke: "#e11d48"
+    font-color: "#9f1239"
+  }
+}
+
+"Démarrage application" -> "Cache local": "Lire"
+"Cache local" -> "Cache disponible ?"
+"Cache disponible ?" -> "Restaurer session": "Oui"
+"Cache disponible ?" -> "Accueil prêt": "Non"
+"Restaurer session" -> "Accueil prêt"
+"Accueil prêt" -> "Action utilisateur"
+"Action utilisateur" -> "Mettre à jour état"
+"Mettre à jour état" -> "Écrire cache"
+"Écrire cache" -> "Cache local"

@@ -1,0 +1,205 @@
+"Accueil\n(Visualisation / Libre / Play / Édition)": {
+  shape: rectangle
+  style: {
+    fill: "#e8f1ff"
+    stroke: "#2563eb"
+    font-color: "#1e3a8a"
+    border-radius: 8
+  }
+}
+
+"Bibliothèque": {
+  shape: rectangle
+  style: {
+    fill: "#f6eaff"
+    stroke: "#9333ea"
+    font-color: "#6b21a8"
+    border-radius: 8
+  }
+}
+
+"Popup recherche / filtres": {
+  shape: rectangle
+  style: {
+    fill: "#f3f0ff"
+    stroke: "#7c3aed"
+    font-color: "#5b21b6"
+    border-radius: 8
+  }
+}
+
+"Popup menu item": {
+  shape: rectangle
+  style: {
+    fill: "#f9f5ff"
+    stroke: "#8b5cf6"
+    font-color: "#6d28d9"
+    border-radius: 8
+  }
+}
+
+"Popup rename / tags / delete": {
+  shape: rectangle
+  style: {
+    fill: "#ede9fe"
+    stroke: "#7c3aed"
+    font-color: "#5b21b6"
+    border-radius: 8
+  }
+}
+
+"Fiche": {
+  shape: rectangle
+  style: {
+    fill: "#eefce8"
+    stroke: "#16a34a"
+    font-color: "#166534"
+    border-radius: 8
+  }
+}
+
+"Popup import / export": {
+  shape: rectangle
+  style: {
+    fill: "#ecfccb"
+    stroke: "#65a30d"
+    font-color: "#3f6212"
+    border-radius: 8
+  }
+}
+
+"Création mélange": {
+  shape: rectangle
+  style: {
+    fill: "#fff5dc"
+    stroke: "#d97706"
+    font-color: "#92400e"
+    border-radius: 8
+  }
+}
+
+"Popup chargement": {
+  shape: rectangle
+  style: {
+    fill: "#fff7ed"
+    stroke: "#f97316"
+    font-color: "#9a3412"
+    border-radius: 8
+  }
+}
+
+"Popup sauvegarde édition": {
+  shape: rectangle
+  style: {
+    fill: "#fff1f2"
+    stroke: "#e11d48"
+    font-color: "#9f1239"
+    border-radius: 8
+  }
+}
+
+"Timer": {
+  shape: rectangle
+  style: {
+    fill: "#ffe7ef"
+    stroke: "#db2777"
+    font-color: "#9d174d"
+    border-radius: 8
+  }
+}
+
+"Paramètres": {
+  shape: rectangle
+  style: {
+    fill: "#e7f7f4"
+    stroke: "#0f766e"
+    font-color: "#115e59"
+    border-radius: 8
+  }
+}
+
+"Popup connexion": {
+  shape: rectangle
+  style: {
+    fill: "#ecfeff"
+    stroke: "#0891b2"
+    font-color: "#155e75"
+    border-radius: 8
+  }
+}
+
+"Popup créer compte": {
+  shape: rectangle
+  style: {
+    fill: "#cffafe"
+    stroke: "#06b6d4"
+    font-color: "#155e75"
+    border-radius: 8
+  }
+}
+
+"Popup changer mot de passe": {
+  shape: rectangle
+  style: {
+    fill: "#ccfbf1"
+    stroke: "#14b8a6"
+    font-color: "#115e59"
+    border-radius: 8
+  }
+}
+
+"Backend cloud": {
+  shape: cloud
+  style: {
+    fill: "#eef2f7"
+    stroke: "#64748b"
+    font-color: "#334155"
+  }
+}
+
+"Scan N1": {
+  shape: rectangle
+  style: {
+    fill: "#fff2e8"
+    stroke: "#ea580c"
+    font-color: "#9a3412"
+    border-radius: 8
+  }
+}
+
+"État partagé du cube": {
+  shape: hexagon
+  style: {
+    fill: "#ecfdf5"
+    stroke: "#16a34a"
+    font-color: "#166534"
+  }
+}
+
+"Accueil\n(Visualisation / Libre / Play / Édition)" -> "Scan N1": "Scanner"
+"Accueil\n(Visualisation / Libre / Play / Édition)" -> "Popup chargement": "Charger algo / mélange"
+"Accueil\n(Visualisation / Libre / Play / Édition)" -> "Popup sauvegarde édition": "Save"
+"Accueil\n(Visualisation / Libre / Play / Édition)" -> "Bibliothèque": "Navbar"
+"Accueil\n(Visualisation / Libre / Play / Édition)" -> "Timer": "Navbar"
+"Accueil\n(Visualisation / Libre / Play / Édition)" -> "Paramètres": "Navbar"
+"Accueil\n(Visualisation / Libre / Play / Édition)" -> "État partagé du cube": "Moves / reset / play"
+
+"Bibliothèque" -> "Popup recherche / filtres": "Search / tags"
+"Bibliothèque" -> "Popup menu item": "..."
+"Bibliothèque" -> "Fiche": "Voir fiche"
+"Bibliothèque" -> "Création mélange": "Créer mélange"
+"Popup menu item" -> "Popup rename / tags / delete": "Renommer / tags / supprimer"
+
+"Fiche" -> "Popup import / export": "Importer / Export PDF"
+"Fiche" -> "Popup chargement": "Play / Édition"
+"Fiche" -> "État partagé du cube": "Sauvegarder fiche"
+
+"Création mélange" -> "Popup chargement": "Charger un code"
+"Création mélange" -> "État partagé du cube": "Sauvegarder mélange"
+
+"Timer" -> "État partagé du cube": "Save time"
+
+"Paramètres" -> "Popup connexion": "Se connecter"
+"Paramètres" -> "Popup créer compte": "Créer un compte"
+"Paramètres" -> "Popup changer mot de passe": "Changer le mot de passe"
+"Paramètres" -> "Backend cloud": "Récupérer / vider"

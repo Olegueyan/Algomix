@@ -1,0 +1,53 @@
+﻿<!doctype html>
+<html lang="fr">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Algomix - Home Edit</title><link rel="stylesheet" href="./common.css" /></head>
+<body>
+  <article class="phone"><div class="screen">
+    <header class="header"><div class="title">Algomix</div></header>
+    <main class="content">
+      <section class="mode-nav">
+        <div class="mode-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg><span>Visualisation</span></div>
+        <div class="mode-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8Z"/></svg><span>Libre</span></div>
+        <div class="mode-item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Play</span></div>
+        <div class="mode-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16v4Z"/></svg><span>Édition</span></div>
+      </section>
+
+      <section class="card">
+        <div class="unknown-label">Unknown</div>
+        <div class="row" style="margin-bottom:6px;"><div class="btn ghost">Charger un algo</div><div class="btn ghost">Charger un mélange</div></div>
+        <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:28%;"></div></div></div>
+        <div class="controls" style="margin-top:8px;grid-template-columns:repeat(6,1fr);"><div class="control">Prev</div><div class="control">Next</div><div class="control active">x1.0</div><div class="control">Auto</div><div class="control">Loop</div><div class="control">Reset</div></div>
+        <div class="algo-string" style="margin-top:8px;"><span class="done">R U </span><span class="last">R'</span><span> U' F2</span></div>
+        <div class="icon-btn-row" style="margin-top:8px;grid-template-columns:repeat(5,1fr);">
+          <div class="icon-btn" title="Save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h13l3 3v13H4z"/><path d="M8 4v6h8V4"/><path d="M9 20v-6h6v6"/></svg></div>
+          <div class="icon-btn" title="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14 5 9l5-5"/><path d="M20 20a8 8 0 0 0-8-8H5"/></svg></div>
+          <div class="icon-btn" title="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 14 5-5-5-5"/><path d="M4 20a8 8 0 0 1 8-8h7"/></svg></div>
+          <div class="icon-btn danger" title="Suppress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13"/><path d="m14 9 4 6M18 9l-4 6"/></svg></div>
+          <div class="icon-btn danger" title="Delete all"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m6 6 1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></svg></div>
+        </div>
+      </section>
+
+      <section class="cube-stage fill-remaining"><img src="../../Images/Notations/Cube_Rotations/no_rotation.png" alt="Cube 3x3" /></section>
+
+      <section class="card">
+        <div class="kbd-nav"><div class="arrow">◀</div><div class="kbd-nav-title">Face Turns</div><div class="arrow">▶</div></div>
+        <div class="pill-row" style="margin-bottom:8px;"><span class="pill">Cube Rotations</span><span class="pill active">Face Turns</span><span class="pill">Slice Moves</span><span class="pill">Wide Moves</span></div>
+        <div class="kbd-grid">
+          <div class="key"><img src="../../Images/Notations/Face_Turns/U.png" alt="U" /><div class="k">U</div></div><div class="key"><img src="../../Images/Notations/Face_Turns/U_prime.png" alt="U'" /><div class="k">U'</div></div><div class="key"><img src="../../Images/Notations/Face_Turns/U2.png" alt="U2" /><div class="k">U2</div></div>
+          <div class="key"><img src="../../Images/Notations/Face_Turns/D.png" alt="D" /><div class="k">D</div></div><div class="key"><img src="../../Images/Notations/Face_Turns/D_prime.png" alt="D'" /><div class="k">D'</div></div><div class="key"><img src="../../Images/Notations/Face_Turns/D2.png" alt="D2" /><div class="k">D2</div></div>
+          <div class="key"><img src="../../Images/Notations/Face_Turns/R.png" alt="R" /><div class="k">R</div></div><div class="key"><img src="../../Images/Notations/Face_Turns/R_prime.png" alt="R'" /><div class="k">R'</div></div><div class="key"><img src="../../Images/Notations/Face_Turns/R2.png" alt="R2" /><div class="k">R2</div></div>
+          <div class="key"><img src="../../Images/Notations/Face_Turns/L.png" alt="L" /><div class="k">L</div></div><div class="key"><img src="../../Images/Notations/Face_Turns/L_prime.png" alt="L'" /><div class="k">L'</div></div><div class="key"><img src="../../Images/Notations/Face_Turns/L2.png" alt="L2" /><div class="k">L2</div></div>
+        </div>
+      </section>
+    </main>
+    <nav class="bottom-nav" aria-label="Navigation principale">
+      <div class="bottom-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span>Accueil</span></div>
+      <div class="bottom-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Bibliothèque</span></div>
+      <div class="bottom-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg><span>Timer</span></div>
+      <div class="bottom-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.05 13a8 8 0 0 1 0 -2l-2.05 -1.5l2 -3.5l2.4 .5a8 8 0 0 1 1.7 -1l.35 -2.5h4l.35 2.5a8 8 0 0 1 1.7 1l2.4 -.5l2 3.5l-2.05 1.5a8 8 0 0 1 0 2l2.05 1.5l-2 3.5l-2.4 -.5a8 8 0 0 1 -1.7 1l-.35 2.5h-4l-.35 -2.5a8 8 0 0 1 -1.7 -1l-2.4 .5l-2 -3.5z"/><circle cx="12" cy="12" r="3"/></svg><span>Paramètres</span></div>
+    </nav>
+  </div></article>
+</body>
+</html>
+
+

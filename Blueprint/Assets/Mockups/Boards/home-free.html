@@ -1,0 +1,96 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algomix - Home Free</title>
+  <link rel="stylesheet" href="./common.css" />
+</head>
+<body>
+  <article class="phone">
+    <div class="screen">
+      <header class="header"><div class="title">Algomix</div></header>
+      <main class="content">
+        <section class="mode-nav">
+          <div class="mode-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+            <span>Visualisation</span>
+          </div>
+          <div class="mode-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8Z"/></svg>
+            <span>Libre</span>
+          </div>
+          <div class="mode-item">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <span>Play</span>
+          </div>
+          <div class="mode-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4l10-10-4-4L4 16v4Z"/></svg>
+            <span>Édition</span>
+          </div>
+        </section>
+
+        <section class="top-actions">
+          <div class="top-action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Scanner un cube</span>
+          </div>
+          <div class="top-action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 5 5-5 5"/><path d="M21 8H9a4 4 0 0 0-4 4v1"/><path d="m8 21-5-5 5-5"/><path d="M3 16h12a4 4 0 0 0 4-4v-1"/></svg>
+            <span>Mélanger</span>
+          </div>
+        </section>
+
+        <section class="cube-stage fill-remaining">
+          <img src="../../Images/Notations/Cube_Rotations/no_rotation.png" alt="Cube 3x3" />
+        </section>
+
+        <section class="card">
+          <div class="kbd-nav">
+            <div class="arrow">◀</div>
+            <div class="kbd-nav-title">Face Turns</div>
+            <div class="arrow">▶</div>
+          </div>
+          <div class="pill-row" style="margin-bottom:8px;">
+            <span class="pill">Cube Rotations</span>
+            <span class="pill active">Face Turns</span>
+            <span class="pill">Slice Moves</span>
+            <span class="pill">Wide Moves</span>
+          </div>
+          <div class="kbd-grid">
+            <div class="key"><img src="../../Images/Notations/Face_Turns/U.png" alt="U" /><div class="k">U</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/U_prime.png" alt="U'" /><div class="k">U'</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/U2.png" alt="U2" /><div class="k">U2</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/D.png" alt="D" /><div class="k">D</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/D_prime.png" alt="D'" /><div class="k">D'</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/D2.png" alt="D2" /><div class="k">D2</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/R.png" alt="R" /><div class="k">R</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/R_prime.png" alt="R'" /><div class="k">R'</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/R2.png" alt="R2" /><div class="k">R2</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/L.png" alt="L" /><div class="k">L</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/L_prime.png" alt="L'" /><div class="k">L'</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/L2.png" alt="L2" /><div class="k">L2</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/F.png" alt="F" /><div class="k">F</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/F_prime.png" alt="F'" /><div class="k">F'</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/F2.png" alt="F2" /><div class="k">F2</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/B.png" alt="B" /><div class="k">B</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/B_prime.png" alt="B'" /><div class="k">B'</div></div>
+            <div class="key"><img src="../../Images/Notations/Face_Turns/B2.png" alt="B2" /><div class="k">B2</div></div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Navigation principale">
+        <div class="bottom-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span>Accueil</span></div>
+        <div class="bottom-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Bibliothèque</span></div>
+        <div class="bottom-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg><span>Timer</span></div>
+        <div class="bottom-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.05 13a8 8 0 0 1 0 -2l-2.05 -1.5l2 -3.5l2.4 .5a8 8 0 0 1 1.7 -1l.35 -2.5h4l.35 2.5a8 8 0 0 1 1.7 1l2.4 -.5l2 3.5l-2.05 1.5a8 8 0 0 1 0 2l2.05 1.5l-2 3.5l-2.4 -.5a8 8 0 0 1 -1.7 1l-.35 2.5h-4l-.35 -2.5a8 8 0 0 1 -1.7 -1l-2.4 .5l-2 -3.5z"/><circle cx="12" cy="12" r="3"/></svg><span>Paramètres</span></div>
+      </nav>
+    </div>
+  </article>
+</body>
+</html>
+
+
+
+

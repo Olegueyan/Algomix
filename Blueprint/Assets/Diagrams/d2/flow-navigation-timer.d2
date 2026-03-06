@@ -1,0 +1,61 @@
+"Timer": {
+  shape: rectangle
+  style: {
+    fill: "#ffe7ef"
+    stroke: "#db2777"
+    font-color: "#9d174d"
+    border-radius: 8
+  }
+}
+
+"Chrono actif": {
+  shape: hexagon
+  style: {
+    fill: "#fce7f3"
+    stroke: "#ec4899"
+    font-color: "#9d174d"
+  }
+}
+
+"Pause": {
+  shape: hexagon
+  style: {
+    fill: "#ffe4e6"
+    stroke: "#f43f5e"
+    font-color: "#9f1239"
+  }
+}
+
+"Reset": {
+  shape: hexagon
+  style: {
+    fill: "#fdf2f8"
+    stroke: "#db2777"
+    font-color: "#9d174d"
+  }
+}
+
+"Historique": {
+  shape: rectangle
+  style: {
+    fill: "#f8fafc"
+    stroke: "#94a3b8"
+    font-color: "#334155"
+    border-radius: 8
+  }
+}
+
+"État de l'application": {
+  shape: hexagon
+  style: {
+    fill: "#ecfdf5"
+    stroke: "#16a34a"
+    font-color: "#166534"
+  }
+}
+
+"Timer" -> "Chrono actif": "Démarrer"
+"Chrono actif" -> "Pause": "Pause"
+"Pause" -> "Reset": "Reset"
+"Pause" -> "Historique": "Save time"
+"Historique" -> "État de l'application": "Temps sauvegardé"
