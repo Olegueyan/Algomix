@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Algomix</string>
+    <string name="cube_title">Cube Viewer</string>
+    <string name="cube_subtitle">XML-configurable UI component with rotation, pinch zoom and reset.</string>
+</resources>
