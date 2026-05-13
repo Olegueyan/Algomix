@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RubikCubeView">
+        <attr name="rubikBackgroundColor" format="color" />
+        <attr name="rubikBodyColor" format="color" />
+        <attr name="rubikEnableDoubleTapReset" format="boolean" />
+        <attr name="rubikMinZoomFactor" format="float" />
+        <attr name="rubikInitialZoomFactor" format="float" />
+        <attr name="rubikMaxZoomFactor" format="float" />
+    </declare-styleable>
+</resources>
