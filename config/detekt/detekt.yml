@@ -1,0 +1,45 @@
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+
+comments:
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
+
+complexity:
+  LongMethod:
+    threshold: 100
+  TooManyFunctions:
+    thresholdInClasses: 18
+
+naming:
+  FunctionNaming:
+    functionPattern: '[a-z][A-Za-z0-9]*'
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Z0-9_]*'
+
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+  ReturnCount:
+    active: false
+  WildcardImport:
+    active: true
+
+formatting:
+  active: true
+  Indentation:
+    active: true
+    indentSize: 4
+  MaximumLineLength:
+    active: true
+    maxLineLength: 120
+  NoWildcardImports:
+    active: true

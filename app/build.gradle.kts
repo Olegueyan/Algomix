@@ -1,5 +1,8 @@
+import io.gitlab.arturbosch.detekt.Detekt
+
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -27,19 +30,59 @@ android {
             )
         }
     }
+
+    buildFeatures {
+        viewBinding = true
+    }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+
+    kotlin {
+        jvmToolchain(21)
+    }
+
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = true
+        xmlReport = true
+        htmlReport = true
+    }
+
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom("$rootDir/config/detekt/detekt.yml")
+}
+
+tasks.register<Detekt>("detektFormat") {
+    description = "Automatically applies Detekt formatting rules to Kotlin sources."
+    group = "formatting"
+    parallel = true
+    buildUponDefaultConfig = true
+    autoCorrect = true
+    disableDefaultRuleSets = false
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    setSource(files("src/main/java", "src/test/java"))
+    include("**/*.kt", "**/*.kts")
+    basePath = rootDir.absolutePath
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    detektPlugins(libs.detekt.formatting)
+
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation(libs.robolectric)
 }
