@@ -46,4 +46,8 @@ interface LibraryRepository {
     suspend fun setSheetTags(sheetId: SheetId, tagIds: Set<TagId>): AppResult<Unit>
 
     suspend fun setScrambleTags(scrambleId: ScrambleId, tagIds: Set<TagId>): AppResult<Unit>
+
+    suspend fun listSheetTagIds(sheetId: SheetId): AppResult<Set<TagId>>
+
+    suspend fun listScrambleTagIds(scrambleId: ScrambleId): AppResult<Set<TagId>>
 }
