@@ -2,4 +2,14 @@
     <string name="app_name">Algomix</string>
     <string name="cube_title">Visualisation du cube</string>
     <string name="cube_subtitle">Composant UI parametrable via XML avec rotation, pinch zoom et reset.</string>
+    <string name="nav_home">Accueil</string>
+    <string name="nav_library">Bibliotheque</string>
+    <string name="nav_timer">Timer</string>
+    <string name="nav_settings">Parametres</string>
+    <string name="placeholder_library_title">Bibliotheque</string>
+    <string name="placeholder_library_body">La persistance locale est prete. Les vues bibliotheque arrivent au batch 7.</string>
+    <string name="placeholder_timer_title">Timer</string>
+    <string name="placeholder_timer_body">Le repository timer local est disponible. L interface arrive au batch 8.</string>
+    <string name="placeholder_settings_title">Parametres</string>
+    <string name="placeholder_settings_body">Les preferences locales sont disponibles. Les ecrans arrivent au batch 9.</string>
 </resources>

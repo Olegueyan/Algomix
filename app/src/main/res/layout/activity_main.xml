@@ -9,55 +9,26 @@
     android:background="#F4F1EA"
     tools:context=".ui.home.MainActivity">
 
-    <TextView
-        android:id="@+id/cubeTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="24dp"
-        android:text="@string/cube_title"
-        android:textAppearance="?attr/textAppearanceHeadlineMedium"
-        android:textColor="#1F3B73"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Visualisation du cube" />
-
-    <TextView
-        android:id="@+id/cubeSubtitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="24dp"
-        android:text="@string/cube_subtitle"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="#4D5B75"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cubeTitle"
-        tools:text="Glisser pour orbiter · Swipe sur une face · Double-tap = reset" />
-
-    <fr.olegueyan.algomix.ui.components.rubik.RubikCubeView
-        android:id="@+id/cubeView"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/mainFragmentContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="24dp"
-        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#FFFDF8F0"
+        app:itemIconTint="#1F3B73"
+        app:itemTextColor="#1F3B73"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cubeSubtitle"
-        app:rubikBackgroundColor="#FFF4F1EA"
-        app:rubikBodyColor="#FF101114"
-        app:rubikEnableDoubleTapReset="true"
-        app:rubikMinZoomFactor="1.0"
-        app:rubikInitialZoomFactor="1.0"
-        app:rubikMaxZoomFactor="1.45" />
+        app:menu="@menu/main_navigation_menu" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
