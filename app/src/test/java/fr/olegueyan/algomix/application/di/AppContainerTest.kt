@@ -2,9 +2,9 @@ package fr.olegueyan.algomix.application.di
 
 import fr.olegueyan.algomix.application.core.AppErrorType
 import fr.olegueyan.algomix.application.core.ClockProvider
-import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.Instant
 
 class AppContainerTest {
     @Test

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
+@Suppress("TooManyFunctions")
 @Dao
 interface LocalPersistenceDao {
     @Query("SELECT * FROM collections WHERE deleted_at IS NULL ORDER BY name COLLATE NOCASE")

@@ -1,8 +1,10 @@
 package fr.olegueyan.algomix.infrastructure.persistence.local
 
+import android.database.SQLException
 import fr.olegueyan.algomix.application.core.AppError
 import fr.olegueyan.algomix.application.core.AppResult
 import fr.olegueyan.algomix.application.core.ClockProvider
+import java.io.IOException
 
 internal const val OUTBOX_OPERATION_DELETE = "DELETE"
 internal const val OUTBOX_OPERATION_TAGS = "TAGS"
@@ -13,7 +15,13 @@ internal fun ClockProvider.nowMillis(): Long = now().toEpochMilli()
 internal suspend fun <T> storageResult(block: suspend () -> AppResult<T>): AppResult<T> =
     try {
         block()
-    } catch (error: Exception) {
+    } catch (error: SQLException) {
+        AppResult.failure(AppError.Storage(cause = error))
+    } catch (error: IOException) {
+        AppResult.failure(AppError.Storage(cause = error))
+    } catch (error: IllegalStateException) {
+        AppResult.failure(AppError.Storage(cause = error))
+    } catch (error: SecurityException) {
         AppResult.failure(AppError.Storage(cause = error))
     }
 

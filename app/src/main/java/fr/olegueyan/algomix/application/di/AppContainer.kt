@@ -13,6 +13,7 @@ import fr.olegueyan.algomix.application.port.PdfExporter
 import fr.olegueyan.algomix.application.port.SettingsRepository
 import fr.olegueyan.algomix.application.port.TimerRepository
 
+@Suppress("LongParameterList")
 class AppContainer(
     val clockProvider: ClockProvider = SystemClockProvider,
     private val configuredCubeSessionRepository: CubeSessionRepository? = null,

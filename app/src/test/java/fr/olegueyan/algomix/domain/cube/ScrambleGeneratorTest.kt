@@ -1,10 +1,10 @@
 package fr.olegueyan.algomix.domain.cube
 
-import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.random.Random
 
 class ScrambleGeneratorTest {
     @Test

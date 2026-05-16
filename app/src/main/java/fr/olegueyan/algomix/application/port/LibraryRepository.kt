@@ -12,6 +12,7 @@ import fr.olegueyan.algomix.domain.library.SheetId
 import fr.olegueyan.algomix.domain.library.Tag
 import fr.olegueyan.algomix.domain.library.TagId
 
+@Suppress("TooManyFunctions")
 interface LibraryRepository {
     suspend fun listCollections(): AppResult<List<LibraryCollection>>
 

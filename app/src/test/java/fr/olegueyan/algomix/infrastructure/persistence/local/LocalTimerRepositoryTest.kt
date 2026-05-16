@@ -5,7 +5,6 @@ import fr.olegueyan.algomix.application.core.AppError
 import fr.olegueyan.algomix.application.core.ClockProvider
 import fr.olegueyan.algomix.domain.timer.TimerEntry
 import fr.olegueyan.algomix.domain.timer.TimerEntryId
-import java.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -15,6 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.time.Instant
 
 @RunWith(RobolectricTestRunner::class)
 class LocalTimerRepositoryTest {

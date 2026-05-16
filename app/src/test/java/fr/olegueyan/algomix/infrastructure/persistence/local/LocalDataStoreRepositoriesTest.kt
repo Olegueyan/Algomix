@@ -7,8 +7,6 @@ import fr.olegueyan.algomix.domain.session.LocalSessionSnapshot
 import fr.olegueyan.algomix.domain.settings.AppAppearance
 import fr.olegueyan.algomix.domain.settings.CubeTheme
 import fr.olegueyan.algomix.domain.settings.UserPreferences
-import java.io.File
-import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,6 +18,8 @@ import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.time.Instant
 
 class LocalDataStoreRepositoriesTest {
     @get:Rule

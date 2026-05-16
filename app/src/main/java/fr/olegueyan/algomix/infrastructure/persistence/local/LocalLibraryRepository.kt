@@ -18,6 +18,7 @@ import fr.olegueyan.algomix.domain.library.SheetId
 import fr.olegueyan.algomix.domain.library.Tag
 import fr.olegueyan.algomix.domain.library.TagId
 
+@Suppress("TooManyFunctions")
 class LocalLibraryRepository(
     private val dao: LocalPersistenceDao,
     private val clockProvider: ClockProvider = SystemClockProvider,

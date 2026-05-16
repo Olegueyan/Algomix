@@ -13,7 +13,6 @@ import fr.olegueyan.algomix.domain.library.ScrambleId
 import fr.olegueyan.algomix.domain.library.SheetId
 import fr.olegueyan.algomix.domain.library.Tag
 import fr.olegueyan.algomix.domain.library.TagId
-import java.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -23,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.time.Instant
 
 @RunWith(RobolectricTestRunner::class)
 class LocalLibraryRepositoryTest {

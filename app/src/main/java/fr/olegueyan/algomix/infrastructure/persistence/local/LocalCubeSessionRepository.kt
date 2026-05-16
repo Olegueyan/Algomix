@@ -10,8 +10,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import fr.olegueyan.algomix.application.core.AppResult
 import fr.olegueyan.algomix.application.port.CubeSessionRepository
 import fr.olegueyan.algomix.domain.session.LocalSessionSnapshot
-import java.time.Instant
 import kotlinx.coroutines.flow.first
+import java.time.Instant
 
 class LocalCubeSessionRepository(
     private val dataStore: DataStore<Preferences>,

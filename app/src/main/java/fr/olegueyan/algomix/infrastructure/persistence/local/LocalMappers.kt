@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package fr.olegueyan.algomix.infrastructure.persistence.local
 
 import fr.olegueyan.algomix.domain.library.AlgorithmEntry
