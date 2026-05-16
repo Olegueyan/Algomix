@@ -2,6 +2,7 @@ import io.gitlab.arturbosch.detekt.Detekt
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.detekt)
 }
 
@@ -63,6 +64,11 @@ detekt {
     config.setFrom("$rootDir/config/detekt/detekt.yml")
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.incremental", "true")
+}
+
 tasks.register<Detekt>("detektFormat") {
     description = "Automatically applies Detekt formatting rules to Kotlin sources."
     group = "formatting"
@@ -86,6 +92,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
@@ -97,6 +104,7 @@ dependencies {
     implementation(libs.supabase.auth)
     implementation(libs.supabase.postgrest)
     implementation(libs.ktor.client.android)
+    ksp(libs.androidx.room.compiler)
     detektPlugins(libs.detekt.formatting)
 
     testImplementation(libs.junit)
