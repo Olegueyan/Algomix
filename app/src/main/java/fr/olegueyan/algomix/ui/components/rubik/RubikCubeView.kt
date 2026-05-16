@@ -11,7 +11,9 @@ import fr.olegueyan.algomix.application.rubik.interaction.RubikPinchZoomControll
 import fr.olegueyan.algomix.application.rubik.interaction.RubikTouchController
 import fr.olegueyan.algomix.application.rubik.scene.RubikSceneConfiguration
 import fr.olegueyan.algomix.application.rubik.scene.RubikSceneState
+import fr.olegueyan.algomix.domain.cube.CubeState
 import fr.olegueyan.algomix.domain.cube.RubikCubeState
+import fr.olegueyan.algomix.infrastructure.rendering.rubik.RubikCubeRenderStateMapper
 import fr.olegueyan.algomix.infrastructure.rendering.rubik.RubikRenderer
 import kotlin.math.sqrt
 
@@ -137,6 +139,18 @@ class RubikCubeView @JvmOverloads constructor(
             return
         }
         sceneState.resetView()
+    }
+
+    fun renderCube(cubeState: CubeState) {
+        val renderState = RubikCubeRenderStateMapper.map(cubeState)
+        if (rendererAttached) {
+            queueEvent {
+                sceneState.replaceCubeState(renderState)
+            }
+            requestRender()
+            return
+        }
+        sceneState.replaceCubeState(renderState)
     }
 
     private fun cancelActiveInteraction() {

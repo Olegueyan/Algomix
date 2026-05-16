@@ -83,6 +83,11 @@ internal class RubikSceneState(
         camera.setTargetZoom(initialZoom)
     }
 
+    fun replaceCubeState(nextCubeState: RubikCubeState) {
+        cubeState.cubies.clear()
+        cubeState.cubies += nextCubeState.cubies
+    }
+
     fun animateFrame() {
         camera.animateZoom(RubikSceneConfiguration.ZOOM_SMOOTHING)
         if (!resettingView) {
