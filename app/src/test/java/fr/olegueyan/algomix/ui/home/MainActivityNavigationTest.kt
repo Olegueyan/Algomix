@@ -1,9 +1,13 @@
 package fr.olegueyan.algomix.ui.home
 
+import android.os.Looper
+import android.view.View
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
 import fr.olegueyan.algomix.R
 import fr.olegueyan.algomix.ui.library.LibraryFragment
 import fr.olegueyan.algomix.ui.settings.SettingsFragment
+import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MainRoute
 import fr.olegueyan.algomix.ui.timer.TimerFragment
 import org.junit.Assert.assertEquals
@@ -59,6 +63,41 @@ class MainActivityNavigationTest {
         assertTrue(activity.currentFragment() is HomeFragment)
         assertSame(sharedViewModel, activity.sharedCubeViewModel)
         assertEquals(initialCube, activity.sharedCubeViewModel.uiState.value.cubeState)
+    }
+
+    @Test
+    fun homeStartsInVisualizationMode() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+
+        activity.supportFragmentManager.executePendingTransactions()
+
+        assertEquals(HomeMode.VISUALIZATION, activity.sharedCubeViewModel.uiState.value.homeMode)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.quickActionsGroup).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.keyboardPanel).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.playPanel).visibility)
+    }
+
+    @Test
+    fun homeModeButtonsSwitchVisiblePanels() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.supportFragmentManager.executePendingTransactions()
+
+        activity.findViewById<MaterialButton>(R.id.modeFreeButton).performClick()
+        org.robolectric.Shadows.shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(HomeMode.FREE, activity.sharedCubeViewModel.uiState.value.homeMode)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.keyboardPanel).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.playPanel).visibility)
+
+        activity.findViewById<MaterialButton>(R.id.modePlayButton).performClick()
+        org.robolectric.Shadows.shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.playPanel).visibility)
+        assertEquals(View.GONE, activity.findViewById<View>(R.id.keyboardPanel).visibility)
+
+        activity.findViewById<MaterialButton>(R.id.modeEditButton).performClick()
+        org.robolectric.Shadows.shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.playPanel).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.keyboardPanel).visibility)
+        assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.editActionsPanel).visibility)
     }
 
     private fun MainActivity.currentFragment() =
