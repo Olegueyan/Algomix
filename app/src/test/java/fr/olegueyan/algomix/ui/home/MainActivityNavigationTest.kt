@@ -2,6 +2,7 @@ package fr.olegueyan.algomix.ui.home
 
 import android.os.Looper
 import android.view.View
+import android.widget.TextView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import fr.olegueyan.algomix.R
@@ -47,6 +48,21 @@ class MainActivityNavigationTest {
         activity.bottomNavigation().selectedItemId = R.id.navigation_settings
         activity.supportFragmentManager.executePendingTransactions()
         assertTrue(activity.currentFragment() is SettingsFragment)
+    }
+
+    @Test
+    fun libraryDisplaysOverview() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.supportFragmentManager.executePendingTransactions()
+
+        activity.bottomNavigation().selectedItemId = R.id.navigation_library
+        activity.supportFragmentManager.executePendingTransactions()
+        org.robolectric.Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(
+            activity.getString(R.string.library_title),
+            activity.findViewById<TextView>(R.id.libraryTitle).text,
+        )
     }
 
     @Test
