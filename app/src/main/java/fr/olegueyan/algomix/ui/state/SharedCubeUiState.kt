@@ -10,5 +10,8 @@ data class SharedCubeUiState(
     val activeRoute: MainRoute = MainRoute.HOME,
     val homeMode: HomeMode = HomeMode.VISUALIZATION,
     val playbackState: PlaybackState = PlaybackState(MoveSequence.EMPTY),
+    val playbackBaseCubeState: CubeState = CubeState.solved(),
     val editingSession: EditingSession = EditingSession(),
+    val editingBaseCubeState: CubeState = CubeState.solved(),
+    val homeUiState: HomeUiState = HomeUiState(),
 )

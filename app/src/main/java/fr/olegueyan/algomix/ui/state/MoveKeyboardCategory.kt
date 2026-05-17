@@ -1,0 +1,61 @@
+package fr.olegueyan.algomix.ui.state
+
+enum class MoveKeyboardCategory(
+    val label: String,
+    val moves: List<String>,
+) {
+    CUBE_ROTATIONS(
+        label = "Cube Rotations",
+        moves = listOf("x", "x'", "x2", "y", "y'", "y2", "z", "z'", "z2"),
+    ),
+    FACE_TURNS(
+        label = "Face Turns",
+        moves = listOf(
+            "U",
+            "U'",
+            "U2",
+            "D",
+            "D'",
+            "D2",
+            "R",
+            "R'",
+            "R2",
+            "L",
+            "L'",
+            "L2",
+            "F",
+            "F'",
+            "F2",
+            "B",
+            "B'",
+            "B2",
+        ),
+    ),
+    SLICE_MOVES(
+        label = "Slice Moves",
+        moves = listOf("M", "M'", "M2", "E", "E'", "E2", "S", "S'", "S2"),
+    ),
+    WIDE_MOVES(
+        label = "Wide Moves",
+        moves = listOf(
+            "Rw",
+            "Rw'",
+            "Rw2",
+            "Uw",
+            "Uw'",
+            "Uw2",
+            "Fw",
+            "Fw'",
+            "Fw2",
+            "Lw",
+            "Lw'",
+            "Lw2",
+            "Dw",
+            "Dw'",
+            "Dw2",
+            "Bw",
+            "Bw'",
+            "Bw2",
+        ),
+    ),
+}
