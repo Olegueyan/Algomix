@@ -5,6 +5,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.GridLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -13,23 +14,34 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import fr.olegueyan.algomix.R
+import fr.olegueyan.algomix.application.port.LibraryRepository
 import fr.olegueyan.algomix.databinding.FragmentHomeBinding
+import fr.olegueyan.algomix.domain.cube.MoveParser
+import fr.olegueyan.algomix.domain.library.AlgorithmEntry
+import fr.olegueyan.algomix.domain.library.AlgorithmId
+import fr.olegueyan.algomix.domain.library.LibraryCollection
+import fr.olegueyan.algomix.domain.library.Scramble
+import fr.olegueyan.algomix.domain.library.ScrambleId
 import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MoveKeyboardCategory
 import fr.olegueyan.algomix.ui.state.SharedCubeUiState
 import fr.olegueyan.algomix.ui.viewmodel.SharedCubeViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @Suppress("TooManyFunctions")
 class HomeFragment : Fragment() {
     private var binding: FragmentHomeBinding? = null
     private lateinit var sharedCubeViewModel: SharedCubeViewModel
+    private lateinit var libraryRepository: LibraryRepository
     private var renderedKeyboardCategory: MoveKeyboardCategory? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val activity = requireActivity() as MainActivity
         sharedCubeViewModel = activity.sharedCubeViewModel
+        libraryRepository = activity.appContainer.libraryRepository().getOrNull()
+            ?: error("LibraryRepository is not configured")
     }
 
     override fun onCreateView(
@@ -83,15 +95,15 @@ class HomeFragment : Fragment() {
         }
         currentBinding.scanButton.setOnClickListener { sharedCubeViewModel.requestScan() }
         currentBinding.scrambleButton.setOnClickListener { sharedCubeViewModel.scramble() }
-        currentBinding.loadAlgorithmButton.setOnClickListener { sharedCubeViewModel.requestLoadAlgorithm() }
-        currentBinding.loadScrambleButton.setOnClickListener { sharedCubeViewModel.requestLoadScramble() }
+        currentBinding.loadAlgorithmButton.setOnClickListener { showLoadAlgorithmDialog() }
+        currentBinding.loadScrambleButton.setOnClickListener { showLoadScrambleDialog() }
         currentBinding.playPreviousButton.setOnClickListener { sharedCubeViewModel.playPrevious() }
         currentBinding.playNextButton.setOnClickListener { sharedCubeViewModel.playNext() }
         currentBinding.playSpeedButton.setOnClickListener { sharedCubeViewModel.cyclePlaybackSpeed() }
         currentBinding.playAutoButton.setOnClickListener { sharedCubeViewModel.toggleAutoPlay() }
         currentBinding.playLoopButton.setOnClickListener { sharedCubeViewModel.toggleLoop() }
         currentBinding.playResetButton.setOnClickListener { sharedCubeViewModel.resetPlayback() }
-        currentBinding.editSaveButton.setOnClickListener { sharedCubeViewModel.requestSaveEditing() }
+        currentBinding.editSaveButton.setOnClickListener { showSaveEditingDialog() }
         currentBinding.editUndoButton.setOnClickListener { sharedCubeViewModel.undoEditing() }
         currentBinding.editRedoButton.setOnClickListener { sharedCubeViewModel.redoEditing() }
         currentBinding.editSuppressButton.setOnClickListener { sharedCubeViewModel.suppressLastEditingMove() }
@@ -195,6 +207,160 @@ class HomeFragment : Fragment() {
             .show()
     }
 
+    private fun showLoadAlgorithmDialog() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val sheets = libraryRepository.listSheets().getOrNull().orEmpty()
+            val algorithms = sheets.flatMap { sheet ->
+                libraryRepository.listAlgorithms(sheet.id).getOrNull().orEmpty()
+            }
+            if (algorithms.isEmpty()) {
+                sharedCubeViewModel.showFeedback("Aucun algorithme disponible")
+                return@launch
+            }
+            val labels = algorithms.map { "${it.name} - ${it.sequence}" }.toTypedArray()
+            var selectedIndex = NO_SELECTION
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.library_load_title)
+                .setSingleChoiceItems(labels, NO_SELECTION) { _, which -> selectedIndex = which }
+                .setNegativeButton(R.string.library_cancel, null)
+                .setPositiveButton(R.string.home_load_algorithm) { _, _ ->
+                    val algorithm = algorithms.getOrNull(selectedIndex)
+                    if (algorithm == null) {
+                        sharedCubeViewModel.showFeedback("Selection requise")
+                    } else {
+                        loadSequence(algorithm.name, algorithm.sequence)
+                    }
+                }
+                .show()
+        }
+    }
+
+    private fun showLoadScrambleDialog() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val scrambles = libraryRepository.listScrambles().getOrNull().orEmpty()
+            if (scrambles.isEmpty()) {
+                sharedCubeViewModel.showFeedback("Aucun melange disponible")
+                return@launch
+            }
+            val labels = scrambles.map { "${it.name} - ${it.sequence}" }.toTypedArray()
+            var selectedIndex = NO_SELECTION
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.library_load_title)
+                .setSingleChoiceItems(labels, NO_SELECTION) { _, which -> selectedIndex = which }
+                .setNegativeButton(R.string.library_cancel, null)
+                .setPositiveButton(R.string.home_load_scramble) { _, _ ->
+                    val scramble = scrambles.getOrNull(selectedIndex)
+                    if (scramble == null) {
+                        sharedCubeViewModel.showFeedback("Selection requise")
+                    } else {
+                        loadSequence(scramble.name, scramble.sequence)
+                    }
+                }
+                .show()
+        }
+    }
+
+    private fun loadSequence(name: String, sequence: String) {
+        val parsedSequence = try {
+            MoveParser.parse(sequence)
+        } catch (_: IllegalArgumentException) {
+            sharedCubeViewModel.showFeedback("Sequence invalide")
+            return
+        }
+        sharedCubeViewModel.loadPlaybackSequence(parsedSequence)
+        sharedCubeViewModel.setHomeMode(HomeMode.PLAY)
+        sharedCubeViewModel.showFeedback("$name charge")
+    }
+
+    private fun showSaveEditingDialog() {
+        val sequence = sharedCubeViewModel.uiState.value.editingSession.sequence.normalizedNotation
+        if (sequence.isBlank()) {
+            sharedCubeViewModel.showFeedback("Sequence vide")
+            return
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val collections = libraryRepository.listCollections().getOrNull().orEmpty()
+            if (collections.isEmpty()) {
+                showCreateCollectionForSaveDialog(sequence)
+                return@launch
+            }
+            val sheets = libraryRepository.listSheets().getOrNull().orEmpty()
+            val choices = (sheets.map { "Fiche: ${it.name}" } + "Nouveau melange").toTypedArray()
+            var selectedIndex = if (choices.isNotEmpty()) 0 else NO_SELECTION
+            val nameInput = EditText(requireContext()).apply {
+                hint = getString(R.string.library_name_hint)
+                setText("Edition ${System.currentTimeMillis()}")
+            }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.library_save_edit_title)
+                .setView(nameInput)
+                .setSingleChoiceItems(choices, selectedIndex) { _, which -> selectedIndex = which }
+                .setNegativeButton(R.string.library_cancel, null)
+                .setPositiveButton(R.string.library_save) { _, _ ->
+                    saveEditingSelection(sequence, nameInput.text.toString(), collections, sheets, selectedIndex)
+                }
+                .show()
+        }
+    }
+
+    private fun showCreateCollectionForSaveDialog(sequence: String) {
+        val nameInput = EditText(requireContext()).apply { hint = getString(R.string.library_collection_hint) }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.library_create_collection)
+            .setView(nameInput)
+            .setNegativeButton(R.string.library_cancel, null)
+            .setPositiveButton(R.string.library_create) { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val collection = LibraryCollection(
+                        id = fr.olegueyan.algomix.domain.library.CollectionId(newId()),
+                        name = nameInput.text.toString(),
+                    )
+                    libraryRepository.saveCollection(collection)
+                    saveScramble(collection, "Edition ${System.currentTimeMillis()}", sequence)
+                }
+            }
+            .show()
+    }
+
+    private fun saveEditingSelection(
+        sequence: String,
+        name: String,
+        collections: List<LibraryCollection>,
+        sheets: List<fr.olegueyan.algomix.domain.library.AlgorithmSheet>,
+        selectedIndex: Int,
+    ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val selectedSheet = sheets.getOrNull(selectedIndex)
+            if (selectedSheet != null) {
+                val position = libraryRepository.listAlgorithms(selectedSheet.id).getOrNull().orEmpty().size
+                libraryRepository.saveAlgorithm(
+                    AlgorithmEntry(
+                        id = AlgorithmId(newId()),
+                        sheetId = selectedSheet.id,
+                        name = name,
+                        sequence = sequence,
+                        position = position,
+                    ),
+                )
+                sharedCubeViewModel.showFeedback("Algorithme sauvegarde")
+            } else {
+                saveScramble(collections.first(), name, sequence)
+            }
+        }
+    }
+
+    private suspend fun saveScramble(collection: LibraryCollection, name: String, sequence: String) {
+        libraryRepository.saveScramble(
+            Scramble(
+                id = ScrambleId(newId()),
+                collectionId = collection.id,
+                name = name,
+                sequence = sequence,
+            ),
+        )
+        sharedCubeViewModel.showFeedback("Melange sauvegarde")
+    }
+
     private fun Int.toHomeMode(): HomeMode =
         when (this) {
             R.id.modeFreeButton -> HomeMode.FREE
@@ -258,5 +424,8 @@ class HomeFragment : Fragment() {
 
     companion object {
         private const val MOVE_BUTTON_MARGIN = 4
+        private const val NO_SELECTION = -1
     }
+
+    private fun newId(): String = UUID.randomUUID().toString()
 }

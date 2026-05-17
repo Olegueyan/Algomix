@@ -202,6 +202,10 @@ class SharedCubeViewModel(
         updateFeedback("Sauvegarde disponible au batch 7")
     }
 
+    fun showFeedback(message: String) {
+        updateFeedback(message)
+    }
+
     fun consumeFeedback() {
         updateAndPersist { current -> current.copy(homeUiState = current.homeUiState.copy(feedbackMessage = null)) }
     }
