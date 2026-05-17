@@ -6,6 +6,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import fr.olegueyan.algomix.application.core.ClockProvider
 import fr.olegueyan.algomix.application.core.SystemClockProvider
 import fr.olegueyan.algomix.application.di.AppContainer
+import fr.olegueyan.algomix.infrastructure.export.LocalPdfExporter
 import fr.olegueyan.algomix.infrastructure.persistence.local.AlgomixDatabase
 import fr.olegueyan.algomix.infrastructure.persistence.local.LocalCubeSessionRepository
 import fr.olegueyan.algomix.infrastructure.persistence.local.LocalLibraryRepository
@@ -23,6 +24,7 @@ object AndroidAppContainerFactory {
         val appContext = context.applicationContext
         val database = AlgomixDatabase.create(appContext)
         val dao = database.localPersistenceDao()
+        val libraryRepository = LocalLibraryRepository(dao, clockProvider)
         val dataStoreScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val settingsDataStore = PreferenceDataStoreFactory.create(
             scope = dataStoreScope,
@@ -36,9 +38,10 @@ object AndroidAppContainerFactory {
         return AppContainer(
             clockProvider = clockProvider,
             configuredCubeSessionRepository = LocalCubeSessionRepository(sessionDataStore),
-            configuredLibraryRepository = LocalLibraryRepository(dao, clockProvider),
+            configuredLibraryRepository = libraryRepository,
             configuredTimerRepository = LocalTimerRepository(dao, clockProvider),
             configuredSettingsRepository = LocalSettingsRepository(settingsDataStore),
+            configuredPdfExporter = LocalPdfExporter(appContext, libraryRepository),
         )
     }
 }
