@@ -18,6 +18,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
+import org.robolectric.shadows.ShadowDialog
 
 @RunWith(RobolectricTestRunner::class)
 class MainActivityNavigationTest {
@@ -83,6 +85,46 @@ class MainActivityNavigationTest {
             activity.findViewById<MaterialButton>(R.id.startPauseButton).text,
         )
         activity.findViewById<MaterialButton>(R.id.startPauseButton).performClick()
+    }
+
+    @Test
+    fun settingsDisplaysRealLayoutAndCloudFeedback() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.supportFragmentManager.executePendingTransactions()
+
+        activity.bottomNavigation().selectedItemId = R.id.navigation_settings
+        activity.supportFragmentManager.executePendingTransactions()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(
+            activity.getString(R.string.settings_title),
+            activity.findViewById<TextView>(R.id.settingsTitle).text,
+        )
+
+        activity.findViewById<MaterialButton>(R.id.recoverCloudButton).performClick()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(
+            "Connexion cloud requise",
+            activity.findViewById<TextView>(R.id.settingsFeedback).text,
+        )
+    }
+
+    @Test
+    fun settingsDialogsOpenFromCloudActions() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.supportFragmentManager.executePendingTransactions()
+
+        activity.bottomNavigation().selectedItemId = R.id.navigation_settings
+        activity.supportFragmentManager.executePendingTransactions()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        activity.findViewById<MaterialButton>(R.id.signInButton).performClick()
+        assertTrue(ShadowDialog.getLatestDialog().isShowing)
+        ShadowDialog.getLatestDialog().dismiss()
+
+        activity.findViewById<MaterialButton>(R.id.createAccountButton).performClick()
+        assertTrue(ShadowDialog.getLatestDialog().isShowing)
     }
 
     @Test
