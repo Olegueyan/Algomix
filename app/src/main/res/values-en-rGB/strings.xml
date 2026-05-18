@@ -77,4 +77,13 @@
     <string name="library_empty">No item</string>
     <string name="library_algorithms_title">Algorithm sets</string>
     <string name="library_share_pdf_title">Share sheet</string>
+    <string name="timer_title">Timer</string>
+    <string name="timer_history_title">Time history</string>
+    <string name="timer_history_empty">No saved time</string>
+    <string name="timer_zero">00:00.00</string>
+    <string name="timer_start">Start</string>
+    <string name="timer_pause">Pause</string>
+    <string name="timer_resume">Resume</string>
+    <string name="timer_reset">Reset</string>
+    <string name="timer_save_time">Save time</string>
 </resources>

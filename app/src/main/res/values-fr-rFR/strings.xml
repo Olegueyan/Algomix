@@ -77,4 +77,13 @@
     <string name="library_empty">Aucun element</string>
     <string name="library_algorithms_title">Ensembles d algorithmes</string>
     <string name="library_share_pdf_title">Partager la fiche</string>
+    <string name="timer_title">Timer</string>
+    <string name="timer_history_title">Historique des temps</string>
+    <string name="timer_history_empty">Aucun temps enregistre</string>
+    <string name="timer_zero">00:00.00</string>
+    <string name="timer_start">Start</string>
+    <string name="timer_pause">Pause</string>
+    <string name="timer_resume">Reprendre</string>
+    <string name="timer_reset">Reset</string>
+    <string name="timer_save_time">Save time</string>
 </resources>
