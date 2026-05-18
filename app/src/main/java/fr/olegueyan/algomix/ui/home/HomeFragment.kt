@@ -15,6 +15,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import fr.olegueyan.algomix.R
 import fr.olegueyan.algomix.application.port.LibraryRepository
+import fr.olegueyan.algomix.application.port.SettingsRepository
 import fr.olegueyan.algomix.databinding.FragmentHomeBinding
 import fr.olegueyan.algomix.domain.cube.MoveParser
 import fr.olegueyan.algomix.domain.library.AlgorithmEntry
@@ -22,6 +23,7 @@ import fr.olegueyan.algomix.domain.library.AlgorithmId
 import fr.olegueyan.algomix.domain.library.LibraryCollection
 import fr.olegueyan.algomix.domain.library.Scramble
 import fr.olegueyan.algomix.domain.library.ScrambleId
+import fr.olegueyan.algomix.ui.settings.CubeThemeAppearanceMapper
 import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MoveKeyboardCategory
 import fr.olegueyan.algomix.ui.state.SharedCubeUiState
@@ -34,6 +36,7 @@ class HomeFragment : Fragment() {
     private var binding: FragmentHomeBinding? = null
     private lateinit var sharedCubeViewModel: SharedCubeViewModel
     private lateinit var libraryRepository: LibraryRepository
+    private lateinit var settingsRepository: SettingsRepository
     private var renderedKeyboardCategory: MoveKeyboardCategory? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +45,8 @@ class HomeFragment : Fragment() {
         sharedCubeViewModel = activity.sharedCubeViewModel
         libraryRepository = activity.appContainer.libraryRepository().getOrNull()
             ?: error("LibraryRepository is not configured")
+        settingsRepository = activity.appContainer.settingsRepository().getOrNull()
+            ?: error("SettingsRepository is not configured")
     }
 
     override fun onCreateView(
@@ -67,6 +72,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        applyCubeTheme()
         binding?.cubeView?.onResume()
     }
 
@@ -108,6 +114,13 @@ class HomeFragment : Fragment() {
         currentBinding.editRedoButton.setOnClickListener { sharedCubeViewModel.redoEditing() }
         currentBinding.editSuppressButton.setOnClickListener { sharedCubeViewModel.suppressLastEditingMove() }
         currentBinding.editDeleteAllButton.setOnClickListener { confirmDeleteAllEditing() }
+    }
+
+    private fun applyCubeTheme() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val preferences = settingsRepository.loadPreferences().getOrNull() ?: return@launch
+            binding?.cubeView?.appearance = CubeThemeAppearanceMapper.map(preferences.cubeTheme)
+        }
     }
 
     private fun render(state: SharedCubeUiState) {
