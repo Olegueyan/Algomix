@@ -3,7 +3,6 @@ package fr.olegueyan.algomix.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import fr.olegueyan.algomix.R
 import fr.olegueyan.algomix.application.port.SettingsRepository
-import fr.olegueyan.algomix.application.port.TimerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,15 +13,6 @@ data class PlaceholderUiState(
 )
 
 class HomeViewModel : ViewModel()
-
-class TimerViewModel(
-    @Suppress("unused") private val timerRepository: TimerRepository,
-) : ViewModel() {
-    private val mutableUiState = MutableStateFlow(
-        PlaceholderUiState(R.string.placeholder_timer_title, R.string.placeholder_timer_body),
-    )
-    val uiState: StateFlow<PlaceholderUiState> = mutableUiState.asStateFlow()
-}
 
 class SettingsViewModel(
     @Suppress("unused") private val settingsRepository: SettingsRepository,
