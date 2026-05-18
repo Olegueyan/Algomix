@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/settingsRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F4F1EA"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/settingsTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_title"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="#003A5D"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/settingsFeedback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#FFFFF7E8"
+            android:padding="10dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="#8A3B00"
+            android:visibility="gone"
+            tools:text="Preferences sauvegardees"
+            tools:visibility="visible" />
+
+        <LinearLayout
+            android:id="@+id/appearanceCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="#FFFDF8F0"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_app_appearance"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="#003A5D"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/appearanceToggleGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:selectionRequired="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/lightModeButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_light_mode" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/darkModeButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_dark_mode" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cubeThemeCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#FFFDF8F0"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_cube_themes"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="#003A5D"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/filledThemeButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="start|center_vertical"
+                android:text="@string/settings_theme_filled" />
+
+            <TextView
+                android:id="@+id/filledThemeInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/settings_theme_filled_info"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="#4D5B75" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/stickerThemeButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="start|center_vertical"
+                android:text="@string/settings_theme_sticker" />
+
+            <TextView
+                android:id="@+id/stickerThemeInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/settings_theme_sticker_info"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="#4D5B75" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/carbonThemeButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="start|center_vertical"
+                android:text="@string/settings_theme_carbon" />
+
+            <TextView
+                android:id="@+id/carbonThemeInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="@string/settings_theme_carbon_info"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="#4D5B75" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/persistenceCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#FFFDF8F0"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_data_persistence"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="#003A5D"
+                android:textStyle="bold" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/localCubeCacheSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/settings_local_cube_cache" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_local_cube_cache_info"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="#4D5B75" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/sessionPersistenceSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/settings_session_persistence" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_session_persistence_info"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="#4D5B75" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cloudCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#FFFDF8F0"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_cloud_sync"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="#003A5D"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/cloudStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/settings_cloud_disconnected"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="#4D5B75" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/signInButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_sign_in" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/createAccountButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_create_account" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/recoverCloudButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_recover_cloud" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/purgeCloudButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_purge_cloud" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/profileCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#FFFDF8F0"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/profileTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_profile"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="#003A5D"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/profileName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/settings_profile_disconnected"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="#003A5D" />
+
+            <TextView
+                android:id="@+id/profileEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="#4D5B75"
+                tools:text="alex.martin@example.com" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editProfileButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:enabled="false"
+                    android:text="@string/settings_edit_profile" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/changePasswordButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_change_password" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/signOutButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/settings_sign_out" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
