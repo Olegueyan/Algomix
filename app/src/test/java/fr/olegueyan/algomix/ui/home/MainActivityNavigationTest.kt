@@ -66,6 +66,26 @@ class MainActivityNavigationTest {
     }
 
     @Test
+    fun timerDisplaysRealLayoutAndStartButtonChangesState() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.supportFragmentManager.executePendingTransactions()
+
+        activity.bottomNavigation().selectedItemId = R.id.navigation_timer
+        activity.supportFragmentManager.executePendingTransactions()
+        org.robolectric.Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(activity.getString(R.string.timer_title), activity.findViewById<TextView>(R.id.timerTitle).text)
+
+        activity.findViewById<MaterialButton>(R.id.startPauseButton).performClick()
+
+        assertEquals(
+            activity.getString(R.string.timer_pause),
+            activity.findViewById<MaterialButton>(R.id.startPauseButton).text,
+        )
+        activity.findViewById<MaterialButton>(R.id.startPauseButton).performClick()
+    }
+
+    @Test
     fun returningHomeKeepsActivityScopedSharedViewModel() {
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
         val sharedViewModel = activity.sharedCubeViewModel
