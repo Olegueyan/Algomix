@@ -47,3 +47,32 @@ internal fun outbox(
         operation = operation,
         createdAt = createdAt,
     )
+
+internal suspend fun LocalPersistenceDao.markCloudEligible(
+    entityType: String,
+    entityId: String,
+    updatedAt: Long,
+    deletedAt: Long? = null,
+) {
+    upsertSyncMetadata(
+        SyncMetadataEntity(
+            id = "$entityType:$entityId",
+            entityType = entityType,
+            entityId = entityId,
+            updatedAt = updatedAt,
+            deletedAt = deletedAt,
+            cloudEligible = true,
+        ),
+    )
+}
+
+internal suspend fun LocalPersistenceDao.enqueueCloudMutation(
+    entityType: String,
+    entityId: String,
+    operation: String,
+    updatedAt: Long,
+    deletedAt: Long? = null,
+) {
+    markCloudEligible(entityType, entityId, updatedAt, deletedAt)
+    insertOutbox(outbox(entityType, entityId, operation, updatedAt))
+}

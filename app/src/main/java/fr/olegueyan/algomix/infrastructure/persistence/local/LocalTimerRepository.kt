@@ -22,7 +22,7 @@ class LocalTimerRepository(
             }
             val now = clockProvider.nowMillis()
             dao.upsertTimerEntry(entry.toEntity(updatedAt = now))
-            dao.insertOutbox(outbox("timer_entry", entry.id.value, OUTBOX_OPERATION_UPSERT, now))
+            dao.enqueueCloudMutation("timer_entry", entry.id.value, OUTBOX_OPERATION_UPSERT, now)
             AppResult.success(entry)
         }
 
@@ -32,7 +32,7 @@ class LocalTimerRepository(
             if (dao.softDeleteTimerEntry(id.value, now) == 0) {
                 return@storageResult notFound("Timer entry")
             }
-            dao.insertOutbox(outbox("timer_entry", id.value, OUTBOX_OPERATION_DELETE, now))
+            dao.enqueueCloudMutation("timer_entry", id.value, OUTBOX_OPERATION_DELETE, now, deletedAt = now)
             AppResult.success(Unit)
         }
 
@@ -42,7 +42,7 @@ class LocalTimerRepository(
             val activeIds = dao.listActiveTimerEntryIds()
             dao.softDeleteAllTimerEntries(now)
             activeIds.forEach { id ->
-                dao.insertOutbox(outbox("timer_entry", id, OUTBOX_OPERATION_DELETE, now))
+                dao.enqueueCloudMutation("timer_entry", id, OUTBOX_OPERATION_DELETE, now, deletedAt = now)
             }
             AppResult.success(Unit)
         }

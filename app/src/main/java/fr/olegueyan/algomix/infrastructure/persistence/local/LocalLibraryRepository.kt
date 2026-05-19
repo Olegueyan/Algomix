@@ -31,7 +31,7 @@ class LocalLibraryRepository(
             validateName(collection.name, "Collection")?.let { return@storageResult AppResult.failure(it) }
             val now = clockProvider.nowMillis()
             dao.upsertCollection(collection.toEntity(updatedAt = now))
-            dao.insertOutbox(outbox("collection", collection.id.value, OUTBOX_OPERATION_UPSERT, now))
+            dao.enqueueCloudMutation("collection", collection.id.value, OUTBOX_OPERATION_UPSERT, now)
             AppResult.success(collection.copy(name = collection.name.trim()))
         }
 
@@ -49,7 +49,7 @@ class LocalLibraryRepository(
             }
             val now = clockProvider.nowMillis()
             dao.upsertSheet(sheet.toEntity(updatedAt = now))
-            dao.insertOutbox(outbox("algorithm_sheet", sheet.id.value, OUTBOX_OPERATION_UPSERT, now))
+            dao.enqueueCloudMutation("algorithm_sheet", sheet.id.value, OUTBOX_OPERATION_UPSERT, now)
             AppResult.success(sheet.copy(name = sheet.name.trim()))
         }
 
@@ -74,7 +74,7 @@ class LocalLibraryRepository(
                 ?: return@storageResult AppResult.failure(AppError.Validation("Algorithm sequence is invalid"))
             val now = clockProvider.nowMillis()
             dao.upsertAlgorithm(algorithm.toEntity(sequence = sequence, updatedAt = now))
-            dao.insertOutbox(outbox("algorithm", algorithm.id.value, OUTBOX_OPERATION_UPSERT, now))
+            dao.enqueueCloudMutation("algorithm", algorithm.id.value, OUTBOX_OPERATION_UPSERT, now)
             AppResult.success(algorithm.copy(name = algorithm.name.trim(), sequence = sequence))
         }
 
@@ -94,7 +94,7 @@ class LocalLibraryRepository(
                 ?: return@storageResult AppResult.failure(AppError.Validation("Scramble sequence is invalid"))
             val now = clockProvider.nowMillis()
             dao.upsertScramble(scramble.toEntity(sequence = sequence, updatedAt = now))
-            dao.insertOutbox(outbox("scramble", scramble.id.value, OUTBOX_OPERATION_UPSERT, now))
+            dao.enqueueCloudMutation("scramble", scramble.id.value, OUTBOX_OPERATION_UPSERT, now)
             AppResult.success(scramble.copy(name = scramble.name.trim(), sequence = sequence))
         }
 
@@ -109,7 +109,7 @@ class LocalLibraryRepository(
             validateName(tag.name, "Tag")?.let { return@storageResult AppResult.failure(it) }
             val now = clockProvider.nowMillis()
             dao.upsertTag(tag.toEntity(updatedAt = now))
-            dao.insertOutbox(outbox("tag", tag.id.value, OUTBOX_OPERATION_UPSERT, now))
+            dao.enqueueCloudMutation("tag", tag.id.value, OUTBOX_OPERATION_UPSERT, now)
             AppResult.success(tag.copy(name = tag.name.trim()))
         }
 
@@ -126,7 +126,7 @@ class LocalLibraryRepository(
             val tagValues = tagIds.mapTo(mutableSetOf()) { it.value }
             dao.clearSheetTags(sheetId.value)
             dao.insertSheetTags(tagValues.map { tagId -> SheetTagEntity(sheetId.value, tagId) })
-            dao.insertOutbox(outbox("algorithm_sheet", sheetId.value, OUTBOX_OPERATION_TAGS, now))
+            dao.enqueueCloudMutation("algorithm_sheet", sheetId.value, OUTBOX_OPERATION_TAGS, now)
             AppResult.success(Unit)
         }
 
@@ -140,7 +140,7 @@ class LocalLibraryRepository(
             val tagValues = tagIds.mapTo(mutableSetOf()) { it.value }
             dao.clearScrambleTags(scrambleId.value)
             dao.insertScrambleTags(tagValues.map { tagId -> ScrambleTagEntity(scrambleId.value, tagId) })
-            dao.insertOutbox(outbox("scramble", scrambleId.value, OUTBOX_OPERATION_TAGS, now))
+            dao.enqueueCloudMutation("scramble", scrambleId.value, OUTBOX_OPERATION_TAGS, now)
             AppResult.success(Unit)
         }
 
@@ -170,7 +170,7 @@ class LocalLibraryRepository(
             if (delete(id, now) == 0) {
                 return@storageResult notFound(entityType)
             }
-            dao.insertOutbox(outbox(entityType, id, OUTBOX_OPERATION_DELETE, now))
+            dao.enqueueCloudMutation(entityType, id, OUTBOX_OPERATION_DELETE, now, deletedAt = now)
             AppResult.success(Unit)
         }
 
