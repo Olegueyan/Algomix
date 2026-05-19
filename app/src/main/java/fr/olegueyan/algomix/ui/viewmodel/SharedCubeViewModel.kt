@@ -187,7 +187,19 @@ class SharedCubeViewModel(
     }
 
     fun requestScan() {
-        updateFeedback("Scan disponible au batch 11")
+        updateFeedback("Ouverture du scan")
+    }
+
+    fun applyScannedCube(cubeState: CubeState) {
+        updateAndPersist { current ->
+            current.copy(
+                cubeState = cubeState,
+                homeMode = HomeMode.VISUALIZATION,
+                playbackBaseCubeState = cubeState,
+                editingBaseCubeState = cubeState,
+                homeUiState = current.homeUiState.copy(feedbackMessage = "Cube scanne applique"),
+            )
+        }
     }
 
     fun requestLoadAlgorithm() {

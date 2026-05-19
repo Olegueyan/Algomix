@@ -4,6 +4,7 @@ import fr.olegueyan.algomix.application.core.AppResult
 import fr.olegueyan.algomix.application.core.ClockProvider
 import fr.olegueyan.algomix.application.port.CubeSessionRepository
 import fr.olegueyan.algomix.domain.cube.CubeState
+import fr.olegueyan.algomix.domain.cube.MoveExecutor
 import fr.olegueyan.algomix.domain.cube.MoveParser
 import fr.olegueyan.algomix.domain.session.LocalSessionSnapshot
 import fr.olegueyan.algomix.ui.state.HomeMode
@@ -166,9 +167,6 @@ class SharedCubeViewModelTest {
     fun placeholderActionsExposeNonBlockingFeedback() {
         val viewModel = createViewModel()
 
-        viewModel.requestScan()
-        assertEquals("Scan disponible au batch 11", viewModel.uiState.value.homeUiState.feedbackMessage)
-
         viewModel.requestLoadAlgorithm()
         assertEquals(
             "Chargement d'algo disponible au batch 7",
@@ -177,6 +175,21 @@ class SharedCubeViewModelTest {
 
         viewModel.requestSaveEditing()
         assertEquals("Sauvegarde disponible au batch 7", viewModel.uiState.value.homeUiState.feedbackMessage)
+    }
+
+    @Test
+    fun applyScannedCubeReplacesSharedCubeAndReturnsVisualizationMode() {
+        val repository = FakeCubeSessionRepository()
+        val viewModel = createViewModel(repository)
+        val scannedCube = MoveExecutor.apply(CubeState.solved(), MoveParser.parse("R"))
+
+        viewModel.setHomeMode(HomeMode.EDIT)
+        viewModel.applyScannedCube(scannedCube)
+
+        assertEquals(scannedCube, viewModel.uiState.value.cubeState)
+        assertEquals(HomeMode.VISUALIZATION, viewModel.uiState.value.homeMode)
+        assertEquals("Cube scanne applique", viewModel.uiState.value.homeUiState.feedbackMessage)
+        assertEquals("VISUALIZATION", repository.savedSnapshot?.activeHomeMode)
     }
 
     private fun createViewModel(

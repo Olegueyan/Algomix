@@ -1,12 +1,15 @@
 package fr.olegueyan.algomix.ui.home
 
+import android.Manifest
 import android.os.Looper
 import android.view.View
+import android.widget.GridLayout
 import android.widget.TextView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import fr.olegueyan.algomix.R
 import fr.olegueyan.algomix.ui.library.LibraryFragment
+import fr.olegueyan.algomix.ui.scan.ScanDialogFragment
 import fr.olegueyan.algomix.ui.settings.SettingsFragment
 import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MainRoute
@@ -176,6 +179,49 @@ class MainActivityNavigationTest {
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.playPanel).visibility)
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.keyboardPanel).visibility)
         assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.editActionsPanel).visibility)
+    }
+
+    @Test
+    fun scanButtonOpensScanDialogWhenCameraPermissionIsGranted() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.supportFragmentManager.executePendingTransactions()
+        Shadows.shadowOf(activity).grantPermissions(Manifest.permission.CAMERA)
+
+        activity.findViewById<MaterialButton>(R.id.scanButton).performClick()
+        activity.supportFragmentManager.executePendingTransactions()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue(
+            activity.supportFragmentManager.findFragmentByTag(ScanDialogFragment.TAG) is ScanDialogFragment,
+        )
+    }
+
+    @Test
+    fun scanDialogShowsGridProgressAndBlocksValidationWithoutCapture() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        activity.supportFragmentManager.executePendingTransactions()
+        val dialog = ScanDialogFragment()
+
+        dialog.show(activity.supportFragmentManager, ScanDialogFragment.TAG)
+        activity.supportFragmentManager.executePendingTransactions()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(
+            activity.getString(R.string.scan_title),
+            dialog.dialog?.findViewById<TextView>(R.id.scanTitle)?.text,
+        )
+        assertEquals(
+            View.VISIBLE,
+            dialog.dialog?.findViewById<GridLayout>(R.id.scanStickerPreview)?.visibility,
+        )
+
+        dialog.dialog?.findViewById<MaterialButton>(R.id.scanValidateButton)?.performClick()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(
+            activity.getString(R.string.scan_capture_required),
+            dialog.dialog?.findViewById<TextView>(R.id.scanFeedbackText)?.text,
+        )
     }
 
     private fun MainActivity.currentFragment() =

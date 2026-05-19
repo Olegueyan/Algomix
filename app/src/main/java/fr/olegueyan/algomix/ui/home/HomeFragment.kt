@@ -1,5 +1,6 @@
 package fr.olegueyan.algomix.ui.home
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -7,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.GridLayout
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +26,7 @@ import fr.olegueyan.algomix.domain.library.AlgorithmId
 import fr.olegueyan.algomix.domain.library.LibraryCollection
 import fr.olegueyan.algomix.domain.library.Scramble
 import fr.olegueyan.algomix.domain.library.ScrambleId
+import fr.olegueyan.algomix.ui.scan.ScanDialogFragment
 import fr.olegueyan.algomix.ui.settings.CubeThemeAppearanceMapper
 import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MoveKeyboardCategory
@@ -38,6 +42,15 @@ class HomeFragment : Fragment() {
     private lateinit var libraryRepository: LibraryRepository
     private lateinit var settingsRepository: SettingsRepository
     private var renderedKeyboardCategory: MoveKeyboardCategory? = null
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            openScanDialog()
+        } else {
+            sharedCubeViewModel.showFeedback(getString(R.string.scan_permission_denied))
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,7 +112,7 @@ class HomeFragment : Fragment() {
                 sharedCubeViewModel.setKeyboardCategory(checkedId.toKeyboardCategory())
             }
         }
-        currentBinding.scanButton.setOnClickListener { sharedCubeViewModel.requestScan() }
+        currentBinding.scanButton.setOnClickListener { requestCameraPermissionAndOpenScan() }
         currentBinding.scrambleButton.setOnClickListener { sharedCubeViewModel.scramble() }
         currentBinding.loadAlgorithmButton.setOnClickListener { showLoadAlgorithmDialog() }
         currentBinding.loadScrambleButton.setOnClickListener { showLoadScrambleDialog() }
@@ -120,6 +133,22 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             val preferences = settingsRepository.loadPreferences().getOrNull() ?: return@launch
             binding?.cubeView?.appearance = CubeThemeAppearanceMapper.map(preferences.cubeTheme)
+        }
+    }
+
+    private fun requestCameraPermissionAndOpenScan() {
+        if (ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.CAMERA) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            openScanDialog()
+        } else {
+            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun openScanDialog() {
+        if (parentFragmentManager.findFragmentByTag(ScanDialogFragment.TAG) == null) {
+            ScanDialogFragment().show(parentFragmentManager, ScanDialogFragment.TAG)
         }
     }
 

@@ -1,4 +1,5 @@
 <resources>
     <dimen name="settings_dialog_padding">20dp</dimen>
     <dimen name="settings_dialog_spacing">6dp</dimen>
+    <dimen name="scan_sticker_size">34dp</dimen>
 </resources>
