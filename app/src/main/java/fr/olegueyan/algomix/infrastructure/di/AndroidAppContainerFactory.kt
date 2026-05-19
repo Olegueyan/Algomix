@@ -18,6 +18,7 @@ import fr.olegueyan.algomix.infrastructure.persistence.local.LocalCubeSessionRep
 import fr.olegueyan.algomix.infrastructure.persistence.local.LocalLibraryRepository
 import fr.olegueyan.algomix.infrastructure.persistence.local.LocalSettingsRepository
 import fr.olegueyan.algomix.infrastructure.persistence.local.LocalTimerRepository
+import fr.olegueyan.algomix.infrastructure.scan.CameraXCubeScanner
 import fr.olegueyan.algomix.infrastructure.sync.SyncingLibraryRepository
 import fr.olegueyan.algomix.infrastructure.sync.SyncingSettingsRepository
 import fr.olegueyan.algomix.infrastructure.sync.SyncingTimerRepository
@@ -90,6 +91,7 @@ object AndroidAppContainerFactory {
             configuredCloudAuthGateway = supabaseGateways?.authGateway,
             configuredCloudSyncGateway = supabaseGateways?.syncGateway,
             configuredPdfExporter = LocalPdfExporter(appContext, localLibraryRepository),
+            configuredCubeScanner = CameraXCubeScanner(clockProvider),
         )
     }
 }
