@@ -80,20 +80,25 @@ class TimerFragment : Fragment() {
             TimerRunState.RUNNING -> getString(R.string.timer_pause)
             TimerRunState.PAUSED -> getString(R.string.timer_resume)
         }
-        currentBinding.timerFeedback.text = state.feedbackMessage.orEmpty()
-        currentBinding.timerFeedback.visibility = (state.feedbackMessage != null).toVisibility()
+        val feedbackMessage = state.feedbackMessage ?: getString(R.string.timer_loading).takeIf { state.isLoading }
+        currentBinding.timerFeedback.text = feedbackMessage.orEmpty()
+        currentBinding.timerFeedback.visibility = (feedbackMessage != null).toVisibility()
         currentBinding.timerFeedback.setTextColor(if (state.isError) ERROR_COLOR else INFO_COLOR)
-        renderHistory(state.history)
+        renderHistory(state)
     }
 
-    private fun renderHistory(entries: List<TimerDisplayEntry>) {
+    private fun renderHistory(state: TimerUiState) {
         val currentBinding = binding ?: return
         currentBinding.historyContainer.removeAllViews()
-        if (entries.isEmpty()) {
+        if (state.isLoading) {
+            currentBinding.historyContainer.addView(bodyText(getString(R.string.timer_loading)))
+            return
+        }
+        if (state.history.isEmpty()) {
             currentBinding.historyContainer.addView(bodyText(getString(R.string.timer_history_empty)))
             return
         }
-        entries.forEach { entry ->
+        state.history.forEach { entry ->
             currentBinding.historyContainer.addView(historyRow(entry))
         }
     }

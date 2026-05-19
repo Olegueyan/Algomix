@@ -7,11 +7,11 @@
     <string name="nav_timer">Timer</string>
     <string name="nav_settings">Settings</string>
     <string name="placeholder_library_title">Library</string>
-    <string name="placeholder_library_body">Local persistence is ready. Library screens arrive in batch 7.</string>
+    <string name="placeholder_library_body">The local library is available.</string>
     <string name="placeholder_timer_title">Timer</string>
     <string name="placeholder_timer_body">The local timer repository is available. The interface arrives in batch 8.</string>
     <string name="placeholder_settings_title">Settings</string>
-    <string name="placeholder_settings_body">Local preferences are available. Settings screens arrive in batch 9.</string>
+    <string name="placeholder_settings_body">Local and cloud preferences are available.</string>
     <string name="home_mode_visualization">Visualization</string>
     <string name="home_mode_free">Free</string>
     <string name="home_mode_play">Play</string>
@@ -89,11 +89,13 @@
     <string name="library_manage_tags_title">Manage tags</string>
     <string name="library_tags_hint">Comma-separated tags</string>
     <string name="library_empty">No item</string>
+    <string name="library_loading">Loading library...</string>
     <string name="library_algorithms_title">Algorithm sets</string>
     <string name="library_share_pdf_title">Share sheet</string>
     <string name="timer_title">Timer</string>
     <string name="timer_history_title">Time history</string>
     <string name="timer_history_empty">No saved time</string>
+    <string name="timer_loading">Loading history...</string>
     <string name="timer_zero">00:00.00</string>
     <string name="timer_start">Start</string>
     <string name="timer_pause">Pause</string>
@@ -101,6 +103,7 @@
     <string name="timer_reset">Reset</string>
     <string name="timer_save_time">Save time</string>
     <string name="settings_title">Settings</string>
+    <string name="settings_loading">Loading settings...</string>
     <string name="settings_app_appearance">App appearance</string>
     <string name="settings_light_mode">Light mode</string>
     <string name="settings_dark_mode">Dark mode</string>
@@ -149,4 +152,8 @@
     <string name="settings_purge_confirm_title">Clear cloud</string>
     <string name="settings_purge_confirm_message">Delete remote cloud data only? Local data is kept.</string>
     <string name="settings_purge_confirm">Clear</string>
+    <string name="accessibility_home_feedback">Home message</string>
+    <string name="accessibility_move_button_format">Apply move %1$s</string>
+    <string name="accessibility_scan_sticker_format">Scanned sticker %1$d</string>
+    <string name="accessibility_scan_grid">3 by 3 scan grid</string>
 </resources>

@@ -110,8 +110,10 @@ class SettingsFragment : Fragment() {
             currentBinding.sessionPersistenceSwitch.setCheckedIfNeeded(state.preferences.sessionPersistenceEnabled)
             renderThemeButtons(state.preferences.cubeTheme)
             renderCloud(state)
-            currentBinding.settingsFeedback.text = state.feedbackMessage.orEmpty()
-            currentBinding.settingsFeedback.visibility = (state.feedbackMessage != null).toVisibility()
+            val feedbackMessage = state.feedbackMessage
+                ?: getString(R.string.settings_loading).takeIf { state.isLoading }
+            currentBinding.settingsFeedback.text = feedbackMessage.orEmpty()
+            currentBinding.settingsFeedback.visibility = (feedbackMessage != null).toVisibility()
             currentBinding.settingsFeedback.setTextColor(
                 if (state.isError) {
                     0xFF8A1F00.toInt()

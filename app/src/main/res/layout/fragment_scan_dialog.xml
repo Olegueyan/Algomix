@@ -48,7 +48,8 @@
         <fr.olegueyan.algomix.ui.scan.ScanGridOverlayView
             android:id="@+id/scanGridOverlay"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:contentDescription="@string/accessibility_scan_grid" />
     </FrameLayout>
 
     <android.widget.GridLayout

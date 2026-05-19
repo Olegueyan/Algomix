@@ -195,6 +195,7 @@ class HomeFragment : Fragment() {
             com.google.android.material.R.attr.materialButtonOutlinedStyle,
         )
         button.text = token
+        button.contentDescription = getString(R.string.accessibility_move_button_format, token)
         button.gravity = Gravity.CENTER
         button.isAllCaps = false
         button.setOnClickListener { sharedCubeViewModel.applyMoveToken(token) }

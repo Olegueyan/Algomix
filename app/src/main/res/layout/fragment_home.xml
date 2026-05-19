@@ -104,6 +104,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="#FFFFF7E8"
+            android:contentDescription="@string/accessibility_home_feedback"
             android:padding="10dp"
             android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="#8A3B00"

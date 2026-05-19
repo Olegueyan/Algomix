@@ -113,8 +113,9 @@ class LibraryFragment : Fragment() {
         currentBinding.sheetPanel.visibility = (state.screen == LibraryScreen.SHEET_PREVIEW).toVisibility()
         currentBinding.scrambleCreatePanel.visibility = (state.screen == LibraryScreen.SCRAMBLE_CREATE).toVisibility()
         currentBinding.typeFilterGroup.checkIfNeeded(state.filterState.itemType.toButtonId())
-        currentBinding.libraryFeedback.text = state.feedback?.message.orEmpty()
-        currentBinding.libraryFeedback.visibility = (state.feedback != null).toVisibility()
+        val feedbackMessage = state.feedback?.message ?: getString(R.string.library_loading).takeIf { state.isLoading }
+        currentBinding.libraryFeedback.text = feedbackMessage.orEmpty()
+        currentBinding.libraryFeedback.visibility = (feedbackMessage != null).toVisibility()
         currentBinding.libraryFeedback.setTextColor(if (state.feedback?.isError == true) ERROR_COLOR else INFO_COLOR)
         currentBinding.scrambleCodeText.text = state.draftScrambleSequence.ifBlank {
             getString(R.string.library_empty)
@@ -141,6 +142,10 @@ class LibraryFragment : Fragment() {
     private fun renderOverview(state: LibraryUiState) {
         val currentBinding = binding ?: return
         currentBinding.overviewContainer.removeAllViews()
+        if (state.isLoading) {
+            currentBinding.overviewContainer.addView(bodyText(getString(R.string.library_loading)))
+            return
+        }
         if (state.visibleSections.isEmpty()) {
             currentBinding.overviewContainer.addView(bodyText(getString(R.string.library_empty)))
             return

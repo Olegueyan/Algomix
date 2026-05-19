@@ -209,6 +209,7 @@ class ScanDialogFragment : DialogFragment() {
         val size = resources.getDimensionPixelSize(R.dimen.scan_sticker_size)
         return View(requireContext()).apply {
             setBackgroundColor(color?.toAndroidColor() ?: EMPTY_STICKER_COLOR)
+            contentDescription = getString(R.string.accessibility_scan_sticker_format, index + 1)
             setOnClickListener {
                 val draft = currentDraft ?: return@setOnClickListener
                 showColorPicker(index, draft)
