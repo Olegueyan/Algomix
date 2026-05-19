@@ -6,13 +6,13 @@ import fr.olegueyan.algomix.application.port.CubeSessionRepository
 import fr.olegueyan.algomix.domain.cube.CubeState
 import fr.olegueyan.algomix.domain.cube.MoveExecutor
 import fr.olegueyan.algomix.domain.cube.MoveParser
+import fr.olegueyan.algomix.domain.session.CubeSessionCodec
 import fr.olegueyan.algomix.domain.session.LocalSessionSnapshot
 import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MainRoute
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
@@ -41,7 +41,7 @@ class SharedCubeViewModelTest {
         assertEquals(initialCube, viewModel.uiState.value.cubeState)
         assertEquals(MainRoute.TIMER, viewModel.uiState.value.activeRoute)
         assertEquals("TIMER", repository.savedSnapshot?.activeRoute)
-        assertNull(repository.savedSnapshot?.serializedCubeState)
+        assertEquals(initialCube, CubeSessionCodec.decode(repository.savedSnapshot?.serializedCubeState))
     }
 
     @Test
@@ -56,14 +56,16 @@ class SharedCubeViewModelTest {
     }
 
     @Test
-    fun restoresRouteHomeModeAndPlaybackIndexFromSession() = runBlocking {
+    fun restoresRouteHomeModeCubeSequenceAndPlaybackIndexFromSession() = runBlocking {
+        val sequence = MoveParser.parse("R U")
+        val cubeState = MoveExecutor.apply(CubeState.solved(), sequence)
         val repository = FakeCubeSessionRepository(
             loadedSnapshot = LocalSessionSnapshot(
-                serializedCubeState = null,
+                serializedCubeState = CubeSessionCodec.encode(cubeState),
                 activeRoute = "LIBRARY",
                 activeHomeMode = "PLAY",
-                activeSequence = null,
-                playbackIndex = 3,
+                activeSequence = sequence.normalizedNotation,
+                playbackIndex = 2,
                 updatedAt = Instant.EPOCH,
             ),
         )
@@ -73,7 +75,36 @@ class SharedCubeViewModelTest {
 
         assertEquals(MainRoute.LIBRARY, viewModel.uiState.value.activeRoute)
         assertEquals(HomeMode.PLAY, viewModel.uiState.value.homeMode)
-        assertEquals(3, viewModel.uiState.value.playbackState.currentIndex)
+        assertEquals(cubeState, viewModel.uiState.value.cubeState)
+        assertEquals(sequence, viewModel.uiState.value.playbackState.sequence)
+        assertEquals(2, viewModel.uiState.value.playbackState.currentIndex)
+
+        viewModel.playPrevious()
+
+        assertEquals(1, viewModel.uiState.value.playbackState.currentIndex)
+        assertEquals(
+            MoveExecutor.apply(CubeState.solved(), MoveParser.parse("R")),
+            viewModel.uiState.value.cubeState,
+        )
+    }
+
+    @Test
+    fun invalidSerializedCubeFallsBackToSolvedCube() = runBlocking {
+        val repository = FakeCubeSessionRepository(
+            loadedSnapshot = LocalSessionSnapshot(
+                serializedCubeState = "invalid",
+                activeRoute = "HOME",
+                activeHomeMode = "VISUALIZATION",
+                activeSequence = "R",
+                playbackIndex = 1,
+                updatedAt = Instant.EPOCH,
+            ),
+        )
+        val viewModel = createViewModel(repository)
+
+        viewModel.restoreSession()
+
+        assertEquals(CubeState.solved(), viewModel.uiState.value.cubeState)
     }
 
     @Test
@@ -169,12 +200,33 @@ class SharedCubeViewModelTest {
 
         viewModel.requestLoadAlgorithm()
         assertEquals(
-            "Chargement d'algo disponible au batch 7",
+            "Utilisez Charger algo pour ouvrir la selection",
             viewModel.uiState.value.homeUiState.feedbackMessage,
         )
 
         viewModel.requestSaveEditing()
-        assertEquals("Sauvegarde disponible au batch 7", viewModel.uiState.value.homeUiState.feedbackMessage)
+        assertEquals(
+            "Utilisez Save en edition pour sauvegarder",
+            viewModel.uiState.value.homeUiState.feedbackMessage,
+        )
+    }
+
+    @Test
+    fun editingImpossibleActionsExposeFeedback() {
+        val viewModel = createViewModel()
+        viewModel.setHomeMode(HomeMode.EDIT)
+
+        viewModel.undoEditing()
+        assertEquals("Aucun undo disponible", viewModel.uiState.value.homeUiState.feedbackMessage)
+
+        viewModel.redoEditing()
+        assertEquals("Aucun redo disponible", viewModel.uiState.value.homeUiState.feedbackMessage)
+
+        viewModel.suppressLastEditingMove()
+        assertEquals("Aucun move a supprimer", viewModel.uiState.value.homeUiState.feedbackMessage)
+
+        viewModel.deleteAllEditing()
+        assertEquals("Sequence deja vide", viewModel.uiState.value.homeUiState.feedbackMessage)
     }
 
     @Test

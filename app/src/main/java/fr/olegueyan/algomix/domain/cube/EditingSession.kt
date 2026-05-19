@@ -24,11 +24,15 @@ data class EditingSession(
     }
 
     fun deleteAll(): EditingSession =
-        copy(
-            sequence = MoveSequence.EMPTY,
-            undoStack = undoStack + sequence,
-            redoStack = emptyList(),
-        )
+        if (sequence.isEmpty) {
+            this
+        } else {
+            copy(
+                sequence = MoveSequence.EMPTY,
+                undoStack = undoStack + sequence,
+                redoStack = emptyList(),
+            )
+        }
 
     fun undo(): EditingSession {
         val previous = undoStack.lastOrNull() ?: return this

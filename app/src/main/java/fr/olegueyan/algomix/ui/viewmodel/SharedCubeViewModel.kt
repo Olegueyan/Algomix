@@ -13,6 +13,7 @@ import fr.olegueyan.algomix.domain.cube.MoveParser
 import fr.olegueyan.algomix.domain.cube.MoveSequence
 import fr.olegueyan.algomix.domain.cube.PlaybackState
 import fr.olegueyan.algomix.domain.cube.ScrambleGenerator
+import fr.olegueyan.algomix.domain.session.CubeSessionCodec
 import fr.olegueyan.algomix.domain.session.LocalSessionSnapshot
 import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MainRoute
@@ -46,10 +47,33 @@ class SharedCubeViewModel(
         val snapshot = cubeSessionRepository.loadSession().getOrNull() ?: return
         val restoredRoute = MainRoute.fromStoredName(snapshot.activeRoute) ?: MainRoute.HOME
         val restoredHomeMode = HomeMode.fromStoredName(snapshot.activeHomeMode) ?: HomeMode.VISUALIZATION
+        val restoredCubeState = CubeSessionCodec.decode(snapshot.serializedCubeState) ?: CubeState.solved()
+        val restoredSequence = parseStoredSequence(snapshot.activeSequence)
+        val restoredIndex = snapshot.playbackIndex.coerceIn(0, restoredSequence.moves.size)
+        val restoredBase = restoredCubeState.baseBefore(restoredSequence, restoredIndex)
+        val restoredEditingSession = if (restoredHomeMode == HomeMode.EDIT) {
+            EditingSession(sequence = restoredSequence)
+        } else {
+            mutableUiState.value.editingSession
+        }
         mutableUiState.value = mutableUiState.value.copy(
+            cubeState = restoredCubeState,
             activeRoute = restoredRoute,
             homeMode = restoredHomeMode,
-            playbackState = mutableUiState.value.playbackState.copy(currentIndex = snapshot.playbackIndex),
+            playbackState = PlaybackState(
+                sequence = restoredSequence,
+                currentIndex = restoredIndex,
+            ),
+            playbackBaseCubeState = restoredBase,
+            editingSession = restoredEditingSession,
+            editingBaseCubeState = restoredBase,
+            homeUiState = mutableUiState.value.homeUiState.copy(
+                freeSequenceNotation = if (restoredHomeMode == HomeMode.FREE) {
+                    restoredSequence.normalizedNotation
+                } else {
+                    mutableUiState.value.homeUiState.freeSequenceNotation
+                },
+            ),
         )
     }
 
@@ -171,19 +195,31 @@ class SharedCubeViewModel(
     }
 
     fun undoEditing() {
-        updateEditingSession { current -> current.undo() }
+        updateEditingSession(
+            feedback = "Undo applique",
+            unchangedFeedback = "Aucun undo disponible",
+        ) { current -> current.undo() }
     }
 
     fun redoEditing() {
-        updateEditingSession { current -> current.redo() }
+        updateEditingSession(
+            feedback = "Redo applique",
+            unchangedFeedback = "Aucun redo disponible",
+        ) { current -> current.redo() }
     }
 
     fun suppressLastEditingMove() {
-        updateEditingSession { current -> current.suppressLastMove() }
+        updateEditingSession(
+            feedback = "Dernier move supprime",
+            unchangedFeedback = "Aucun move a supprimer",
+        ) { current -> current.suppressLastMove() }
     }
 
     fun deleteAllEditing() {
-        updateEditingSession { current -> current.deleteAll() }
+        updateEditingSession(
+            feedback = "Sequence videe",
+            unchangedFeedback = "Sequence deja vide",
+        ) { current -> current.deleteAll() }
     }
 
     fun requestScan() {
@@ -203,15 +239,15 @@ class SharedCubeViewModel(
     }
 
     fun requestLoadAlgorithm() {
-        updateFeedback("Chargement d'algo disponible au batch 7")
+        updateFeedback("Utilisez Charger algo pour ouvrir la selection")
     }
 
     fun requestLoadScramble() {
-        updateFeedback("Chargement de melange disponible au batch 7")
+        updateFeedback("Utilisez Charger melange pour ouvrir la selection")
     }
 
     fun requestSaveEditing() {
-        updateFeedback("Sauvegarde disponible au batch 7")
+        updateFeedback("Utilisez Save en edition pour sauvegarder")
     }
 
     fun showFeedback(message: String) {
@@ -231,10 +267,16 @@ class SharedCubeViewModel(
 
     private fun updateEditingSession(
         feedback: String = "Sequence d'edition mise a jour",
+        unchangedFeedback: String = feedback,
         update: (EditingSession) -> EditingSession,
     ) {
         updateAndPersist { current ->
             val nextSession = update(current.editingSession)
+            if (nextSession == current.editingSession) {
+                return@updateAndPersist current.copy(
+                    homeUiState = current.homeUiState.copy(feedbackMessage = unchangedFeedback),
+                )
+            }
             current.copy(
                 cubeState = MoveExecutor.apply(current.editingBaseCubeState, nextSession.sequence),
                 editingSession = nextSession,
@@ -304,10 +346,10 @@ class SharedCubeViewModel(
     private suspend fun persistSession(state: SharedCubeUiState) {
         cubeSessionRepository.saveSession(
             LocalSessionSnapshot(
-                serializedCubeState = null,
+                serializedCubeState = CubeSessionCodec.encode(state.cubeState),
                 activeRoute = state.activeRoute.name,
                 activeHomeMode = state.homeMode.name,
-                activeSequence = state.playbackState.sequence.normalizedNotation.ifBlank { null },
+                activeSequence = state.activeSequenceForSnapshot().normalizedNotation.ifBlank { null },
                 playbackIndex = state.playbackState.currentIndex,
                 updatedAt = clockProvider.now(),
             ),
@@ -340,3 +382,38 @@ class SharedCubeViewModel(
         private const val DEFAULT_SCRAMBLE_LENGTH = 20
     }
 }
+
+private fun parseStoredSequence(activeSequence: String?): MoveSequence =
+    activeSequence
+        ?.takeIf(String::isNotBlank)
+        ?.let { sequence -> runCatching { MoveParser.parse(sequence) }.getOrNull() }
+        ?: MoveSequence.EMPTY
+
+private fun CubeState.baseBefore(sequence: MoveSequence, index: Int): CubeState {
+    val inversePrefix = MoveSequence(
+        sequence.moves
+            .take(index)
+            .asReversed()
+            .map { move -> move.inverse() },
+    )
+    return MoveExecutor.apply(this, inversePrefix)
+}
+
+private fun fr.olegueyan.algomix.domain.cube.Move.inverse(): fr.olegueyan.algomix.domain.cube.Move =
+    copy(
+        turn = when (turn) {
+            fr.olegueyan.algomix.domain.cube.MoveTurn.CLOCKWISE ->
+                fr.olegueyan.algomix.domain.cube.MoveTurn.COUNTER_CLOCKWISE
+            fr.olegueyan.algomix.domain.cube.MoveTurn.COUNTER_CLOCKWISE ->
+                fr.olegueyan.algomix.domain.cube.MoveTurn.CLOCKWISE
+            fr.olegueyan.algomix.domain.cube.MoveTurn.HALF_TURN ->
+                fr.olegueyan.algomix.domain.cube.MoveTurn.HALF_TURN
+        },
+    )
+
+private fun SharedCubeUiState.activeSequenceForSnapshot(): MoveSequence =
+    when (homeMode) {
+        HomeMode.EDIT -> editingSession.sequence
+        HomeMode.FREE -> parseStoredSequence(homeUiState.freeSequenceNotation)
+        else -> playbackState.sequence
+    }
