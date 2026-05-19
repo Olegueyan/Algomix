@@ -46,4 +46,34 @@ class CubeValidatorTest {
         assertFalse(validation.isValid)
         assertTrue(validation.errors.any { it.contains("must contain 54 stickers") })
     }
+
+    @Test
+    fun duplicateCentersAreRejected() {
+        val stickers = CubeState.solved().faceletCube.stickers.toMutableList()
+        stickers[FaceletCube.FACE_STICKER_COUNT + CENTER_INDEX] = stickers[CENTER_INDEX]
+
+        val validation = CubeValidator.validate(FaceletCube(stickers))
+
+        assertFalse(validation.isValid)
+        assertTrue(validation.errors.any { it.contains("six unique colors") })
+    }
+
+    @Test
+    fun inconsistentEdgeColorSetsAreRejected() {
+        val stickers = CubeState.solved().faceletCube.stickers.toMutableList()
+        val firstEdgeIndex = 1
+        val secondEdgeIndex = FaceletCube.FACE_STICKER_COUNT + 1
+        val first = stickers[firstEdgeIndex]
+        stickers[firstEdgeIndex] = stickers[secondEdgeIndex]
+        stickers[secondEdgeIndex] = first
+
+        val validation = CubeValidator.validate(FaceletCube(stickers))
+
+        assertFalse(validation.isValid)
+        assertTrue(validation.errors.any { it.contains("Edge color sets") })
+    }
+
+    private companion object {
+        const val CENTER_INDEX = 4
+    }
 }
