@@ -12,4 +12,5 @@ internal object RubikSceneConfiguration {
     const val MIN_ZOOM_FACTOR = 1f
     const val INITIAL_ZOOM_FACTOR = 1f
     const val MAX_ZOOM_FACTOR = 1.45f
+    const val MOVE_ANIMATION_DURATION_MS = 130L
 }

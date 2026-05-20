@@ -30,6 +30,19 @@ data class Move(
     val normalizedNotation: String = normalizedBase + turn.suffix
 
     val effectiveQuarterTurns: Int = baseDirection * turn.quarterTurns
+
+    /**
+     * Returns true if a renderer cubie at the given 0..2 grid coordinates belongs to the layer this
+     * move turns. Cube-frame layer indices are {-1, 0, 1}, so we shift by [RubikCubeConstants.CENTER_INDEX].
+     */
+    fun affectsCubie(gx: Int, gy: Int, gz: Int): Boolean {
+        val cubeFrameIndex = when (axis) {
+            MoveAxis.X -> gx - RubikCubeConstants.CENTER_INDEX
+            MoveAxis.Y -> gy - RubikCubeConstants.CENTER_INDEX
+            MoveAxis.Z -> gz - RubikCubeConstants.CENTER_INDEX
+        }
+        return cubeFrameIndex in layers
+    }
 }
 
 data class MoveSequence(

@@ -9,9 +9,12 @@ import android.view.MotionEvent
 import android.view.ViewConfiguration
 import fr.olegueyan.algomix.application.rubik.interaction.RubikPinchZoomController
 import fr.olegueyan.algomix.application.rubik.interaction.RubikTouchController
+import fr.olegueyan.algomix.application.rubik.scene.Quaternion
+import fr.olegueyan.algomix.application.rubik.scene.RubikResetTarget
 import fr.olegueyan.algomix.application.rubik.scene.RubikSceneConfiguration
 import fr.olegueyan.algomix.application.rubik.scene.RubikSceneState
 import fr.olegueyan.algomix.domain.cube.CubeState
+import fr.olegueyan.algomix.domain.cube.Move
 import fr.olegueyan.algomix.domain.cube.RubikCubeState
 import fr.olegueyan.algomix.infrastructure.rendering.rubik.RubikCubeRenderStateMapper
 import fr.olegueyan.algomix.infrastructure.rendering.rubik.RubikRenderer
@@ -31,6 +34,7 @@ class RubikCubeView @JvmOverloads constructor(
     private val cubeRenderer = RubikRenderer(sceneState)
     private var rendererAttached = false
     private var doubleTapResetEnabled = true
+    private var rotationLocked = false
     private val touchController = RubikTouchController(
         dragThresholdPx = ViewConfiguration.get(context).scaledTouchSlop.toFloat(),
     ) { dx, dy ->
@@ -40,6 +44,9 @@ class RubikCubeView @JvmOverloads constructor(
     }
     private val pinchZoomController = RubikPinchZoomController()
     private var consumingDoubleTap = false
+
+    /** Invoked on the UI thread when a double tap occurs and reset is enabled. */
+    var onDoubleTapResetListener: (() -> Unit)? = null
 
     val cubeState: RubikCubeState
         get() = sceneState.cubeState
@@ -63,7 +70,12 @@ class RubikCubeView @JvmOverloads constructor(
                     if (!doubleTapResetEnabled) {
                         return false
                     }
-                    resetView()
+                    val listener = onDoubleTapResetListener
+                    if (listener != null) {
+                        listener()
+                    } else {
+                        resetRotation()
+                    }
                     return true
                 }
             },
@@ -83,6 +95,7 @@ class RubikCubeView @JvmOverloads constructor(
         if (handledDoubleTap || consumingDoubleTap) {
             if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
                 consumingDoubleTap = false
+                parent?.requestDisallowInterceptTouchEvent(false)
             }
             cancelActiveInteraction()
             return true
@@ -90,10 +103,12 @@ class RubikCubeView @JvmOverloads constructor(
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                parent?.requestDisallowInterceptTouchEvent(true)
                 touchController.onDown(event.getPointerId(0), event.x, event.y)
             }
 
             MotionEvent.ACTION_POINTER_DOWN -> {
+                parent?.requestDisallowInterceptTouchEvent(true)
                 touchController.onPointerDown()
                 pinchZoomController.onPointerDown(currentPinchSpan(event))
             }
@@ -108,6 +123,10 @@ class RubikCubeView @JvmOverloads constructor(
                     return true
                 }
 
+                if (rotationLocked) {
+                    return true
+                }
+
                 handleSinglePointerMove(event)
             }
 
@@ -118,39 +137,69 @@ class RubikCubeView @JvmOverloads constructor(
 
             MotionEvent.ACTION_UP -> {
                 touchController.onUp(event.getPointerId(event.actionIndex))
+                parent?.requestDisallowInterceptTouchEvent(false)
             }
 
             MotionEvent.ACTION_CANCEL -> {
                 touchController.onCancel()
                 pinchZoomController.onCancel()
+                parent?.requestDisallowInterceptTouchEvent(false)
             }
         }
 
         return true
     }
 
-    /** Animates the camera back to the isometric auto-fit framing. */
-    fun resetView() {
+    /** Animates the camera back to the given orientation. Zoom is preserved. */
+    fun resetRotation(target: Quaternion = RubikResetTarget.isoQuaternion()) {
         if (rendererAttached) {
             queueEvent {
-                sceneState.resetView()
+                sceneState.resetRotation(target)
             }
             requestRender()
             return
         }
-        sceneState.resetView()
+        sceneState.resetRotation(target)
     }
 
+    /**
+     * Replaces the cube state shown by the view. No-op while a move animation is in flight — the
+     * animation drives the final state once it completes.
+     */
     fun renderCube(cubeState: CubeState) {
         val renderState = RubikCubeRenderStateMapper.map(cubeState)
         if (rendererAttached) {
             queueEvent {
-                sceneState.replaceCubeState(renderState)
+                if (!sceneState.isAnimatingMove) {
+                    sceneState.replaceCubeState(renderState)
+                }
             }
             requestRender()
             return
         }
         sceneState.replaceCubeState(renderState)
+    }
+
+    /** Plays a per-move animation and swaps to [finalState] once it completes. */
+    fun playMove(move: Move, finalState: CubeState) {
+        val renderState = RubikCubeRenderStateMapper.map(finalState)
+        if (rendererAttached) {
+            queueEvent {
+                sceneState.enqueueMoveAnimation(move, renderState)
+            }
+            requestRender()
+            return
+        }
+        sceneState.enqueueMoveAnimation(move, renderState)
+    }
+
+    /** When true, drag gestures are ignored. Pinch zoom remains active. */
+    fun setRotationLocked(locked: Boolean) {
+        if (rotationLocked == locked) return
+        rotationLocked = locked
+        if (locked) {
+            touchController.onCancel()
+        }
     }
 
     private fun cancelActiveInteraction() {

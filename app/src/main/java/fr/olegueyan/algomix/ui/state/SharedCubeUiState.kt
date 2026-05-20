@@ -2,6 +2,7 @@ package fr.olegueyan.algomix.ui.state
 
 import fr.olegueyan.algomix.domain.cube.CubeState
 import fr.olegueyan.algomix.domain.cube.EditingSession
+import fr.olegueyan.algomix.domain.cube.Move
 import fr.olegueyan.algomix.domain.cube.MoveSequence
 import fr.olegueyan.algomix.domain.cube.PlaybackState
 
@@ -14,4 +15,11 @@ data class SharedCubeUiState(
     val editingSession: EditingSession = EditingSession(),
     val editingBaseCubeState: CubeState = CubeState.solved(),
     val homeUiState: HomeUiState = HomeUiState(),
+    val rotationLocked: Boolean = false,
+)
+
+data class AnimatedMoveEvent(
+    val move: Move,
+    val finalState: CubeState,
+    val sequence: Long,
 )

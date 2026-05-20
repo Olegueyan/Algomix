@@ -7,6 +7,7 @@ import android.opengl.Matrix
 import fr.olegueyan.algomix.application.rubik.scene.RubikSceneState
 import fr.olegueyan.algomix.domain.cube.CubeFace
 import fr.olegueyan.algomix.domain.cube.Cubie
+import fr.olegueyan.algomix.domain.cube.MoveAxis
 import fr.olegueyan.algomix.ui.components.rubik.RubikCubeAppearance
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -30,6 +31,8 @@ internal class RubikRenderer(
     private val model = FloatArray(16)
     private val modelViewProjection = FloatArray(16)
     private val temp = FloatArray(16)
+    private val moveRotation = FloatArray(16)
+    private val composedModel = FloatArray(16)
     private val cameraRotation = FloatArray(16)
     private val backgroundColor = FloatArray(4)
     private val bodyColor = FloatArray(4)
@@ -95,6 +98,7 @@ internal class RubikRenderer(
 
     private fun drawCubieBody(cubie: Cubie) {
         RubikCubeTransforms.setCubieBody(model, cubie)
+        applyMoveAnimation(cubie)
         drawModel(model, bodyColor, CubeFace.entries)
     }
 
@@ -102,8 +106,22 @@ internal class RubikRenderer(
         for (face in CubeFace.entries) {
             val stickerColor = cubie.faces[face.ordinal] ?: continue
             RubikCubeTransforms.setSticker(model, cubie, face)
+            applyMoveAnimation(cubie)
             drawModel(model, stickerColor.rgba, listOf(face))
         }
+    }
+
+    private fun applyMoveAnimation(cubie: Cubie) {
+        val rotation = sceneState.currentMoveRotation(cubie) ?: return
+        val (axis, angleDeg) = rotation
+        Matrix.setIdentityM(moveRotation, 0)
+        when (axis) {
+            MoveAxis.X -> Matrix.rotateM(moveRotation, 0, angleDeg, 1f, 0f, 0f)
+            MoveAxis.Y -> Matrix.rotateM(moveRotation, 0, angleDeg, 0f, 1f, 0f)
+            MoveAxis.Z -> Matrix.rotateM(moveRotation, 0, angleDeg, 0f, 0f, 1f)
+        }
+        Matrix.multiplyMM(composedModel, 0, moveRotation, 0, model, 0)
+        System.arraycopy(composedModel, 0, model, 0, model.size)
     }
 
     private fun drawModel(modelMatrix: FloatArray, color: FloatArray, faces: Iterable<CubeFace>) {

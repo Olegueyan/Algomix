@@ -112,10 +112,19 @@ internal class RubikCameraState {
         isoYDeg: Float = RubikSceneConfiguration.ISO_Y_DEG,
     ) {
         val target = isoQuaternion(isoXDeg, isoYDeg)
-        qx += (target[0] - qx) * amount
-        qy += (target[1] - qy) * amount
-        qz += (target[2] - qz) * amount
-        qw += (target[3] - qw) * amount
+        slerpOrientationTo(amount, target[0], target[1], target[2], target[3])
+    }
+
+    fun slerpOrientationTo(amount: Float, tx: Float, ty: Float, tz: Float, tw: Float) {
+        val dot = qx * tx + qy * ty + qz * tz + qw * tw
+        val signedTx = if (dot < 0f) -tx else tx
+        val signedTy = if (dot < 0f) -ty else ty
+        val signedTz = if (dot < 0f) -tz else tz
+        val signedTw = if (dot < 0f) -tw else tw
+        qx += (signedTx - qx) * amount
+        qy += (signedTy - qy) * amount
+        qz += (signedTz - qz) * amount
+        qw += (signedTw - qw) * amount
         normalize()
     }
 
@@ -125,7 +134,11 @@ internal class RubikCameraState {
         isoYDeg: Float = RubikSceneConfiguration.ISO_Y_DEG,
     ): Boolean {
         val target = isoQuaternion(isoXDeg, isoYDeg)
-        val dot = abs(qx * target[0] + qy * target[1] + qz * target[2] + qw * target[3])
+        return isOrientationNear(threshold, target[0], target[1], target[2], target[3])
+    }
+
+    fun isOrientationNear(threshold: Float, tx: Float, ty: Float, tz: Float, tw: Float): Boolean {
+        val dot = abs(qx * tx + qy * ty + qz * tz + qw * tw)
         return dot > threshold
     }
 

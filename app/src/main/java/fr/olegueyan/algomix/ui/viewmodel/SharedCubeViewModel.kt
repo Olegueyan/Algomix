@@ -6,23 +6,31 @@ import androidx.lifecycle.viewModelScope
 import fr.olegueyan.algomix.application.core.ClockProvider
 import fr.olegueyan.algomix.application.core.SystemClockProvider
 import fr.olegueyan.algomix.application.port.CubeSessionRepository
+import fr.olegueyan.algomix.application.rubik.scene.Quaternion
+import fr.olegueyan.algomix.application.rubik.scene.RubikResetTarget
 import fr.olegueyan.algomix.domain.cube.CubeState
 import fr.olegueyan.algomix.domain.cube.EditingSession
+import fr.olegueyan.algomix.domain.cube.Move
 import fr.olegueyan.algomix.domain.cube.MoveExecutor
+import fr.olegueyan.algomix.domain.cube.MoveKind
 import fr.olegueyan.algomix.domain.cube.MoveParser
 import fr.olegueyan.algomix.domain.cube.MoveSequence
 import fr.olegueyan.algomix.domain.cube.PlaybackState
 import fr.olegueyan.algomix.domain.cube.ScrambleGenerator
 import fr.olegueyan.algomix.domain.session.CubeSessionCodec
 import fr.olegueyan.algomix.domain.session.LocalSessionSnapshot
+import fr.olegueyan.algomix.ui.state.AnimatedMoveEvent
 import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MainRoute
 import fr.olegueyan.algomix.ui.state.MoveKeyboardCategory
 import fr.olegueyan.algomix.ui.state.SharedCubeUiState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -35,6 +43,9 @@ class SharedCubeViewModel(
 ) : ViewModel() {
     private val mutableUiState = MutableStateFlow(SharedCubeUiState())
     val uiState: StateFlow<SharedCubeUiState> = mutableUiState.asStateFlow()
+    private val mutableAnimationEvents = MutableSharedFlow<AnimatedMoveEvent>(extraBufferCapacity = ANIMATION_BUFFER)
+    val animationEvents: SharedFlow<AnimatedMoveEvent> = mutableAnimationEvents.asSharedFlow()
+    private var animationSequenceCounter = 0L
     private var autoPlayJob: Job? = null
 
     init {
@@ -118,17 +129,52 @@ class SharedCubeViewModel(
         val move = MoveParser.parseMove(token)
         when (mutableUiState.value.homeMode) {
             HomeMode.EDIT -> applyEditingMove(token)
-            else -> updateAndPersist { current ->
-                val sequence = MoveParser.parse(current.homeUiState.freeSequenceNotation).append(move)
-                current.copy(
-                    cubeState = MoveExecutor.apply(current.cubeState, move),
-                    homeUiState = current.homeUiState.copy(
-                        freeSequenceNotation = sequence.normalizedNotation,
-                        feedbackMessage = "Move $token applique",
-                    ),
-                )
+            else -> {
+                updateAndPersist { current ->
+                    val sequence = MoveParser.parse(current.homeUiState.freeSequenceNotation).append(move)
+                    current.copy(
+                        cubeState = MoveExecutor.apply(current.cubeState, move),
+                        homeUiState = current.homeUiState.copy(
+                            freeSequenceNotation = sequence.normalizedNotation,
+                            feedbackMessage = "Move $token applique",
+                        ),
+                    )
+                }
+                emitAnimationEvent(move)
             }
         }
+    }
+
+    fun toggleRotationLock() {
+        updateAndPersist { current -> current.copy(rotationLocked = !current.rotationLocked) }
+    }
+
+    fun computeResetTargetQuaternion(): Quaternion {
+        val current = mutableUiState.value
+        val rotationMoves = when (current.homeMode) {
+            HomeMode.VISUALIZATION -> emptyList()
+            HomeMode.FREE -> parseStoredSequence(current.homeUiState.freeSequenceNotation).moves
+                .filter { move -> move.kind == MoveKind.ROTATION }
+            HomeMode.PLAY ->
+                current.playbackState.sequence.moves
+                    .take(current.playbackState.currentIndex)
+                    .filter { move -> move.kind == MoveKind.ROTATION }
+            HomeMode.EDIT ->
+                current.editingSession.sequence.moves
+                    .filter { move -> move.kind == MoveKind.ROTATION }
+        }
+        return RubikResetTarget.composeRotationMoves(rotationMoves)
+    }
+
+    private fun emitAnimationEvent(move: Move) {
+        animationSequenceCounter += 1
+        mutableAnimationEvents.tryEmit(
+            AnimatedMoveEvent(
+                move = move,
+                finalState = mutableUiState.value.cubeState,
+                sequence = animationSequenceCounter,
+            ),
+        )
     }
 
     fun scramble(length: Int = DEFAULT_SCRAMBLE_LENGTH) {
@@ -147,13 +193,20 @@ class SharedCubeViewModel(
     }
 
     fun playNext() {
+        val playbackBefore = mutableUiState.value.playbackState
+        val movesSize = playbackBefore.sequence.moves.size
+        val previousIndex = playbackBefore.currentIndex
         updatePlaybackIndex { current ->
-            val playbackState = mutableUiState.value.playbackState
-            if (current == playbackState.sequence.moves.size && playbackState.loop) {
+            if (current == movesSize && playbackBefore.loop) {
                 0
             } else {
-                (current + 1).coerceAtMost(playbackState.sequence.moves.size)
+                (current + 1).coerceAtMost(movesSize)
             }
+        }
+        val nextIndex = mutableUiState.value.playbackState.currentIndex
+        if (nextIndex == previousIndex + 1 && nextIndex <= movesSize) {
+            val playedMove = playbackBefore.sequence.moves.getOrNull(previousIndex)
+            if (playedMove != null) emitAnimationEvent(playedMove)
         }
     }
 
@@ -263,6 +316,7 @@ class SharedCubeViewModel(
         updateEditingSession(
             feedback = "Move $token ajoute",
         ) { current -> current.addMove(move) }
+        emitAnimationEvent(move)
     }
 
     private fun updateEditingSession(
@@ -380,6 +434,7 @@ class SharedCubeViewModel(
 
     companion object {
         private const val DEFAULT_SCRAMBLE_LENGTH = 20
+        private const val ANIMATION_BUFFER = 32
     }
 }
 
