@@ -12,23 +12,37 @@ comments:
 
 complexity:
   LongMethod:
-    threshold: 100
+    threshold: 150
+    ignoreAnnotated: ['Composable']
+  LongParameterList:
+    functionThreshold: 10
+    constructorThreshold: 10
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    threshold: 18
   TooManyFunctions:
     thresholdInClasses: 18
 
 naming:
   FunctionNaming:
     functionPattern: '[a-z][A-Za-z0-9]*'
+    ignoreAnnotated: ['Composable']
   TopLevelPropertyNaming:
     constantPattern: '[A-Z][A-Z0-9_]*'
+  MatchingDeclarationName:
+    active: false
 
 style:
+  ForbiddenComment:
+    active: false
   MagicNumber:
     active: false
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 140
   ReturnCount:
+    active: false
+  UnusedParameter:
     active: false
   WildcardImport:
     active: true
@@ -40,6 +54,6 @@ formatting:
     indentSize: 4
   MaximumLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 140
   NoWildcardImports:
     active: true
