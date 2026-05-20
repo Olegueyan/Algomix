@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scanDialogRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#101114"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/scanTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:text="@string/scan_title"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/scanProgressText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textColor="#DDE8F0"
+        tools:text="Face 1/6 - UP" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="1">
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/scanPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#22252B"
+            app:implementationMode="compatible"
+            app:scaleType="fillCenter" />
+
+        <fr.olegueyan.algomix.ui.scan.ScanGridOverlayView
+            android:id="@+id/scanGridOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/accessibility_scan_grid" />
+    </FrameLayout>
+
+    <android.widget.GridLayout
+        android:id="@+id/scanStickerPreview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:columnCount="3"
+        android:rowCount="3"
+        android:useDefaultMargins="true" />
+
+    <TextView
+        android:id="@+id/scanFeedbackText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="#FFD59E"
+        tools:text="Capture requise" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/scanCancelButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/scan_cancel"
+            android:textColor="#FFFFFF" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/scanCaptureButton"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:text="@string/scan_capture_short"
+            app:cornerRadius="36dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/scanRecaptureButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/scan_recapture"
+            android:textColor="#FFFFFF" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/scanValidateButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/scan_validate"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</LinearLayout>

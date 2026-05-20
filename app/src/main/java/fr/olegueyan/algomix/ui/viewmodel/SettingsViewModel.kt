@@ -6,6 +6,7 @@ import fr.olegueyan.algomix.application.core.AppError
 import fr.olegueyan.algomix.application.core.AppResult
 import fr.olegueyan.algomix.application.port.CloudAuthGateway
 import fr.olegueyan.algomix.application.port.CloudSyncGateway
+import fr.olegueyan.algomix.application.port.CubeSessionRepository
 import fr.olegueyan.algomix.application.port.SettingsRepository
 import fr.olegueyan.algomix.domain.settings.AppAppearance
 import fr.olegueyan.algomix.domain.settings.CubeTheme
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 @Suppress("TooManyFunctions")
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
+    private val cubeSessionRepository: CubeSessionRepository? = null,
     private val cloudAuthGateway: CloudAuthGateway? = null,
     private val cloudSyncGateway: CloudSyncGateway? = null,
     private val taskLauncher: (((suspend () -> Unit)) -> Unit)? = null,
@@ -43,10 +45,16 @@ class SettingsViewModel(
 
     fun setLocalCubeCacheEnabled(enabled: Boolean) {
         savePreferences(mutableUiState.value.preferences.copy(localCubeCacheEnabled = enabled))
+        if (!enabled) {
+            launchTask { removeSerializedCubeFromSnapshot() }
+        }
     }
 
     fun setSessionPersistenceEnabled(enabled: Boolean) {
         savePreferences(mutableUiState.value.preferences.copy(sessionPersistenceEnabled = enabled))
+        if (!enabled) {
+            launchTask { cubeSessionRepository?.clearSession() }
+        }
     }
 
     fun signIn(email: String, password: String) {
@@ -55,12 +63,12 @@ class SettingsViewModel(
             setError("Email et mot de passe requis")
             return
         }
-        val gateway = cloudAuthGateway ?: return setError("Backend cloud non configure")
+        val gateway = cloudAuthGateway ?: return setError("Backend cloud non configuré")
         launchTask {
             when (val result = gateway.signIn(normalizedEmail, password)) {
                 is AppResult.Success -> mutableUiState.value = mutableUiState.value.copy(
                     cloudSession = result.value,
-                    feedbackMessage = "Connexion reussie",
+                    feedbackMessage = "Connexion réussie",
                     isError = false,
                 )
                 is AppResult.Failure -> setError(result.error)
@@ -77,7 +85,7 @@ class SettingsViewModel(
     ) {
         val normalizedEmail = email.trim()
         if (lastName.trim().isBlank() || firstName.trim().isBlank() || normalizedEmail.isBlank()) {
-            setError("Nom, prenom et email requis")
+            setError("Nom, prénom et email requis")
             return
         }
         if (password.isBlank()) {
@@ -85,10 +93,10 @@ class SettingsViewModel(
             return
         }
         if (password != passwordConfirmation) {
-            setError("Confirmation differente")
+            setError("Confirmation différente")
             return
         }
-        val gateway = cloudAuthGateway ?: return setError("Backend cloud non configure")
+        val gateway = cloudAuthGateway ?: return setError("Backend cloud non configuré")
         launchTask {
             when (
                 val result = gateway.createAccount(
@@ -100,7 +108,7 @@ class SettingsViewModel(
             ) {
                 is AppResult.Success -> mutableUiState.value = mutableUiState.value.copy(
                     cloudSession = result.value,
-                    feedbackMessage = "Compte cree",
+                    feedbackMessage = "Compte créé",
                     isError = false,
                 )
                 is AppResult.Failure -> setError(result.error)
@@ -109,12 +117,12 @@ class SettingsViewModel(
     }
 
     fun signOut() {
-        val gateway = cloudAuthGateway ?: return setError("Backend cloud non configure")
+        val gateway = cloudAuthGateway ?: return setError("Backend cloud non configuré")
         launchTask {
             when (val result = gateway.signOut()) {
                 is AppResult.Success -> mutableUiState.value = mutableUiState.value.copy(
                     cloudSession = null,
-                    feedbackMessage = "Deconnecte",
+                    feedbackMessage = "Déconnecté",
                     isError = false,
                 )
                 is AppResult.Failure -> setError(result.error)
@@ -136,14 +144,14 @@ class SettingsViewModel(
             return
         }
         if (newPassword != confirmation) {
-            setError("Confirmation differente")
+            setError("Confirmation différente")
             return
         }
-        val gateway = cloudAuthGateway ?: return setError("Backend cloud non configure")
+        val gateway = cloudAuthGateway ?: return setError("Backend cloud non configuré")
         launchTask {
             when (val result = gateway.changePassword(currentPassword, newPassword)) {
                 is AppResult.Success -> mutableUiState.value = mutableUiState.value.copy(
-                    feedbackMessage = "Mot de passe mis a jour",
+                    feedbackMessage = "Mot de passe mis à jour",
                     isError = false,
                 )
                 is AppResult.Failure -> setError(result.error)
@@ -151,19 +159,32 @@ class SettingsViewModel(
         }
     }
 
-    fun recoverCloud() {
+    fun syncCloud() {
         if (mutableUiState.value.cloudSession == null) {
             setError("Connexion cloud requise")
             return
         }
-        val gateway = cloudSyncGateway ?: return setError("Backend cloud non configure")
+        val gateway = cloudSyncGateway ?: return setError("Backend cloud non configuré")
+        if (mutableUiState.value.isSyncing) return
         launchTask {
-            when (val result = gateway.recover()) {
-                is AppResult.Success -> mutableUiState.value = mutableUiState.value.copy(
-                    feedbackMessage = "Recuperation terminee: ${result.value.pulledItems} elements",
-                    isError = false,
-                )
-                is AppResult.Failure -> setError(result.error)
+            mutableUiState.value = mutableUiState.value.copy(isSyncing = true)
+            try {
+                val pushResult = gateway.pushPendingChanges()
+                val pullResult = gateway.recover()
+                when {
+                    pushResult is AppResult.Failure -> setError(pushResult.error)
+                    pullResult is AppResult.Failure -> setError(pullResult.error)
+                    else -> {
+                        val pushed = (pushResult as AppResult.Success).value.pushedItems
+                        val pulled = (pullResult as AppResult.Success).value.pulledItems
+                        mutableUiState.value = mutableUiState.value.copy(
+                            feedbackMessage = "Sync terminé: $pushed envoyés, $pulled reçus",
+                            isError = false,
+                        )
+                    }
+                }
+            } finally {
+                mutableUiState.value = mutableUiState.value.copy(isSyncing = false)
             }
         }
     }
@@ -173,14 +194,19 @@ class SettingsViewModel(
             setError("Connexion cloud requise")
             return
         }
-        val gateway = cloudSyncGateway ?: return setError("Backend cloud non configure")
+        val gateway = cloudSyncGateway ?: return setError("Backend cloud non configuré")
         launchTask {
+            mutableUiState.value = mutableUiState.value.copy(isSyncing = true)
             when (val result = gateway.purgeRemoteOnly()) {
                 is AppResult.Success -> mutableUiState.value = mutableUiState.value.copy(
-                    feedbackMessage = "Cloud vide: ${result.value.deletedRemoteItems} suppressions",
+                    isSyncing = false,
+                    feedbackMessage = "Cloud vidé: ${result.value.deletedRemoteItems} éléments supprimés",
                     isError = false,
                 )
-                is AppResult.Failure -> setError(result.error)
+                is AppResult.Failure -> {
+                    mutableUiState.value = mutableUiState.value.copy(isSyncing = false)
+                    setError(result.error)
+                }
             }
         }
     }
@@ -216,13 +242,19 @@ class SettingsViewModel(
             when (val result = settingsRepository.savePreferences(preferences)) {
                 is AppResult.Success -> mutableUiState.value = mutableUiState.value.copy(
                     preferences = preferences,
-                    feedbackMessage = "Preferences sauvegardees",
+                    feedbackMessage = "Préférences sauvegardées",
                     isError = false,
                     isLoading = false,
                 )
                 is AppResult.Failure -> setError(result.error)
             }
         }
+    }
+
+    private suspend fun removeSerializedCubeFromSnapshot() {
+        val repository = cubeSessionRepository ?: return
+        val snapshot = repository.loadSession().getOrNull() ?: return
+        repository.saveSession(snapshot.copy(serializedCubeState = null))
     }
 
     private fun setError(message: String) {

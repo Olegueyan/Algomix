@@ -1,6 +1,29 @@
 <resources>
     <style name="Base.Theme.Algomix" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/orange_primary</item>
+        <item name="colorOnPrimary">@color/orange_on_primary</item>
+        <item name="colorPrimaryContainer">@color/orange_container</item>
+        <item name="colorOnPrimaryContainer">@color/orange_on_container</item>
+        <item name="materialButtonStyle">@style/Widget.Algomix.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.Algomix.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.Algomix.Button.Text</item>
     </style>
 
     <style name="Theme.Algomix" parent="Base.Theme.Algomix" />
+
+    <style name="Widget.Algomix.Button" parent="Widget.Material3.Button">
+        <item name="cornerRadius">6dp</item>
+    </style>
+
+    <style name="Widget.Algomix.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">6dp</item>
+    </style>
+
+    <style name="Widget.Algomix.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="cornerRadius">6dp</item>
+    </style>
+
+    <style name="Widget.Algomix.Button.IconButton.Outlined" parent="Widget.Material3.Button.IconButton.Outlined">
+        <item name="cornerRadius">6dp</item>
+    </style>
 </resources>

@@ -163,7 +163,7 @@ class RubikCubeView @JvmOverloads constructor(
     }
 
     /**
-     * Replaces the cube state shown by the view. No-op while a move animation is in flight — the
+     * Replaces the cube state shown by the view. No-op while a move animation is in flight; the
      * animation drives the final state once it completes.
      */
     fun renderCube(cubeState: CubeState) {

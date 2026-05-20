@@ -27,7 +27,7 @@
         </provider>
 
         <activity
-            android:name=".ui.AlgomixActivity"
+            android:name=".ui.home.MainActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import fr.olegueyan.algomix.application.core.ClockProvider
 import fr.olegueyan.algomix.application.core.SystemClockProvider
 import fr.olegueyan.algomix.application.port.CubeSessionRepository
+import fr.olegueyan.algomix.application.port.SettingsRepository
 import fr.olegueyan.algomix.application.rubik.scene.Quaternion
 import fr.olegueyan.algomix.application.rubik.scene.RubikResetTarget
 import fr.olegueyan.algomix.domain.cube.CubeState
@@ -40,6 +41,7 @@ class SharedCubeViewModel(
     private val clockProvider: ClockProvider = SystemClockProvider,
     autoLoadSession: Boolean = true,
     private val taskLauncher: (((suspend () -> Unit)) -> Unit)? = null,
+    private val settingsRepository: SettingsRepository? = null,
 ) : ViewModel() {
     private val mutableUiState = MutableStateFlow(SharedCubeUiState())
     val uiState: StateFlow<SharedCubeUiState> = mutableUiState.asStateFlow()
@@ -55,10 +57,19 @@ class SharedCubeViewModel(
     }
 
     suspend fun restoreSession() {
+        val preferences = settingsRepository?.loadPreferences()?.getOrNull()
+        if (preferences?.sessionPersistenceEnabled == false) {
+            mutableUiState.value = SharedCubeUiState()
+            return
+        }
         val snapshot = cubeSessionRepository.loadSession().getOrNull() ?: return
         val restoredRoute = MainRoute.fromStoredName(snapshot.activeRoute) ?: MainRoute.HOME
-        val restoredHomeMode = HomeMode.fromStoredName(snapshot.activeHomeMode) ?: HomeMode.VISUALIZATION
-        val restoredCubeState = CubeSessionCodec.decode(snapshot.serializedCubeState) ?: CubeState.solved()
+        val restoredHomeMode = HomeMode.fromStoredName(snapshot.activeHomeMode) ?: HomeMode.FREE
+        val restoredCubeState = if (preferences?.localCubeCacheEnabled == false) {
+            CubeState.solved()
+        } else {
+            CubeSessionCodec.decode(snapshot.serializedCubeState) ?: CubeState.solved()
+        }
         val restoredSequence = parseStoredSequence(snapshot.activeSequence)
         val restoredIndex = snapshot.playbackIndex.coerceIn(0, restoredSequence.moves.size)
         val restoredBase = restoredCubeState.baseBefore(restoredSequence, restoredIndex)
@@ -69,6 +80,11 @@ class SharedCubeViewModel(
         }
         mutableUiState.value = mutableUiState.value.copy(
             cubeState = restoredCubeState,
+            mainCubeState = if (restoredHomeMode == HomeMode.EDIT) {
+                mutableUiState.value.mainCubeState
+            } else {
+                restoredCubeState
+            },
             activeRoute = restoredRoute,
             homeMode = restoredHomeMode,
             playbackState = PlaybackState(
@@ -94,10 +110,24 @@ class SharedCubeViewModel(
 
     fun setHomeMode(mode: HomeMode) {
         updateAndPersist { current ->
-            if (mode == HomeMode.EDIT && current.editingSession.sequence.isEmpty) {
-                current.copy(homeMode = mode, editingBaseCubeState = current.cubeState)
-            } else {
-                current.copy(homeMode = mode)
+            when {
+                current.homeMode != HomeMode.EDIT && mode == HomeMode.EDIT -> {
+                    val editBase = if (current.editingSession.sequence.isEmpty) {
+                        CubeState.solved()
+                    } else {
+                        current.editingBaseCubeState
+                    }
+                    current.copy(
+                        homeMode = mode,
+                        mainCubeState = current.cubeState,
+                        editingBaseCubeState = editBase,
+                        cubeState = MoveExecutor.apply(editBase, current.editingSession.sequence),
+                    )
+                }
+                current.homeMode == HomeMode.EDIT && mode != HomeMode.EDIT -> {
+                    current.copy(homeMode = mode, cubeState = current.mainCubeState)
+                }
+                else -> current.copy(homeMode = mode)
             }
         }
     }
@@ -115,13 +145,51 @@ class SharedCubeViewModel(
                 playbackBaseCubeState = baseCubeState,
                 playbackState = PlaybackState(sequence = sequence),
                 cubeState = baseCubeState,
+                mainCubeState = if (current.homeMode == HomeMode.EDIT) current.mainCubeState else baseCubeState,
+            )
+        }
+    }
+
+    fun loadEditingSequence(
+        sequence: MoveSequence,
+        baseCubeState: CubeState = CubeState.solved(),
+    ) {
+        updateAndPersist { current ->
+            current.copy(
+                homeMode = HomeMode.EDIT,
+                editingBaseCubeState = baseCubeState,
+                editingSession = EditingSession(sequence = sequence),
+                playbackBaseCubeState = baseCubeState,
+                playbackState = current.playbackState.copy(
+                    sequence = sequence,
+                    currentIndex = 0,
+                ),
+                cubeState = baseCubeState,
+                homeUiState = current.homeUiState.copy(feedbackMessage = "Séquence chargée", feedbackIsError = false),
             )
         }
     }
 
     fun setKeyboardCategory(category: MoveKeyboardCategory) {
         updateAndPersist { current ->
-            current.copy(homeUiState = current.homeUiState.copy(keyboardCategory = category))
+            val oldCategory = current.homeUiState.keyboardCategory
+            if (current.homeMode != HomeMode.FREE || oldCategory == category) {
+                return@updateAndPersist current.copy(
+                    homeUiState = current.homeUiState.copy(keyboardCategory = category),
+                )
+            }
+            val savedStates = current.homeUiState.categoryCubeStates.toMutableMap()
+            savedStates[oldCategory] = current.cubeState
+            val restoredState = savedStates[category] ?: CubeState.solved()
+            current.copy(
+                cubeState = restoredState,
+                mainCubeState = restoredState,
+                homeUiState = current.homeUiState.copy(
+                    keyboardCategory = category,
+                    categoryCubeStates = savedStates,
+                    freeSequenceNotation = "",
+                ),
+            )
         }
     }
 
@@ -131,12 +199,17 @@ class SharedCubeViewModel(
             HomeMode.EDIT -> applyEditingMove(token)
             else -> {
                 updateAndPersist { current ->
+                    val newCubeState = MoveExecutor.apply(current.cubeState, move)
                     val sequence = MoveParser.parse(current.homeUiState.freeSequenceNotation).append(move)
+                    val category = current.homeUiState.keyboardCategory
+                    val updatedCategoryStates = current.homeUiState.categoryCubeStates.toMutableMap()
+                    updatedCategoryStates[category] = newCubeState
                     current.copy(
-                        cubeState = MoveExecutor.apply(current.cubeState, move),
+                        cubeState = newCubeState,
+                        mainCubeState = newCubeState,
                         homeUiState = current.homeUiState.copy(
                             freeSequenceNotation = sequence.normalizedNotation,
-                            feedbackMessage = "Move $token applique",
+                            categoryCubeStates = updatedCategoryStates,
                         ),
                     )
                 }
@@ -152,7 +225,6 @@ class SharedCubeViewModel(
     fun computeResetTargetQuaternion(): Quaternion {
         val current = mutableUiState.value
         val rotationMoves = when (current.homeMode) {
-            HomeMode.VISUALIZATION -> emptyList()
             HomeMode.FREE -> parseStoredSequence(current.homeUiState.freeSequenceNotation).moves
                 .filter { move -> move.kind == MoveKind.ROTATION }
             HomeMode.PLAY ->
@@ -182,11 +254,12 @@ class SharedCubeViewModel(
         updateAndPersist { current ->
             current.copy(
                 cubeState = MoveExecutor.apply(current.cubeState, sequence),
+                mainCubeState = MoveExecutor.apply(current.cubeState, sequence),
                 playbackBaseCubeState = current.cubeState,
                 playbackState = PlaybackState(sequence = sequence, currentIndex = sequence.moves.size),
                 homeUiState = current.homeUiState.copy(
                     freeSequenceNotation = sequence.normalizedNotation,
-                    feedbackMessage = "Melange genere",
+                    feedbackMessage = "Mélange généré",
                 ),
             )
         }
@@ -211,7 +284,14 @@ class SharedCubeViewModel(
     }
 
     fun playPrevious() {
+        val playbackBefore = mutableUiState.value.playbackState
+        val previousIndex = playbackBefore.currentIndex
         updatePlaybackIndex { current -> (current - 1).coerceAtLeast(0) }
+        val nextIndex = mutableUiState.value.playbackState.currentIndex
+        if (nextIndex == previousIndex - 1 && previousIndex > 0) {
+            val undoneMove = playbackBefore.sequence.moves.getOrNull(nextIndex)?.inverse()
+            if (undoneMove != null) emitAnimationEvent(undoneMove)
+        }
     }
 
     fun resetPlayback() {
@@ -248,31 +328,45 @@ class SharedCubeViewModel(
     }
 
     fun undoEditing() {
-        updateEditingSession(
-            feedback = "Undo applique",
-            unchangedFeedback = "Aucun undo disponible",
-        ) { current -> current.undo() }
+        updateEditingSession { current -> current.undo() }
     }
 
     fun redoEditing() {
-        updateEditingSession(
-            feedback = "Redo applique",
-            unchangedFeedback = "Aucun redo disponible",
-        ) { current -> current.redo() }
+        updateEditingSession { current -> current.redo() }
     }
 
     fun suppressLastEditingMove() {
-        updateEditingSession(
-            feedback = "Dernier move supprime",
-            unchangedFeedback = "Aucun move a supprimer",
-        ) { current -> current.suppressLastMove() }
+        updateEditingSession { current -> current.suppressLastMove() }
     }
 
     fun deleteAllEditing() {
-        updateEditingSession(
-            feedback = "Sequence videe",
-            unchangedFeedback = "Sequence deja vide",
-        ) { current -> current.deleteAll() }
+        updateEditingSession { current -> current.deleteAll() }
+    }
+
+    fun resetCurrentCubeToSolved() {
+        updateAndPersist { current ->
+            val solved = CubeState.solved()
+            when (current.homeMode) {
+                HomeMode.EDIT -> current.copy(
+                    cubeState = solved,
+                    editingBaseCubeState = solved,
+                    editingSession = EditingSession(),
+                    playbackBaseCubeState = solved,
+                    playbackState = PlaybackState(MoveSequence.EMPTY),
+                    homeUiState = current.homeUiState.copy(feedbackMessage = "Cube réinitialisé"),
+                )
+                else -> current.copy(
+                    cubeState = solved,
+                    mainCubeState = solved,
+                    playbackBaseCubeState = solved,
+                    playbackState = PlaybackState(MoveSequence.EMPTY),
+                    homeUiState = current.homeUiState.copy(
+                        freeSequenceNotation = "",
+                        feedbackMessage = "Cube réinitialisé",
+                    ),
+                )
+            }
+        }
     }
 
     fun requestScan() {
@@ -283,58 +377,64 @@ class SharedCubeViewModel(
         updateAndPersist { current ->
             current.copy(
                 cubeState = cubeState,
-                homeMode = HomeMode.VISUALIZATION,
+                mainCubeState = cubeState,
+                homeMode = HomeMode.FREE,
                 playbackBaseCubeState = cubeState,
                 editingBaseCubeState = cubeState,
-                homeUiState = current.homeUiState.copy(feedbackMessage = "Cube scanne applique"),
+                homeUiState = current.homeUiState.copy(feedbackMessage = "Cube scanné appliqué"),
             )
         }
     }
 
     fun requestLoadAlgorithm() {
-        updateFeedback("Utilisez Charger algo pour ouvrir la selection")
+        updateFeedback("Utilisez Charger algo pour ouvrir la sélection")
     }
 
     fun requestLoadScramble() {
-        updateFeedback("Utilisez Charger melange pour ouvrir la selection")
+        updateFeedback("Utilisez Charger mélange pour ouvrir la sélection")
     }
 
     fun requestSaveEditing() {
-        updateFeedback("Utilisez Save en edition pour sauvegarder")
+        updateFeedback("Utilisez Save en édition pour sauvegarder")
     }
 
-    fun showFeedback(message: String) {
-        updateFeedback(message)
+    fun showFeedback(message: String, isError: Boolean = false) {
+        updateAndPersist { current ->
+            current.copy(
+                homeUiState = current.homeUiState.copy(
+                    feedbackMessage = message,
+                    feedbackIsError = isError,
+                ),
+            )
+        }
     }
 
     fun consumeFeedback() {
-        updateAndPersist { current -> current.copy(homeUiState = current.homeUiState.copy(feedbackMessage = null)) }
+        updateAndPersist { current ->
+            current.copy(homeUiState = current.homeUiState.copy(feedbackMessage = null, feedbackIsError = false))
+        }
     }
 
     private fun applyEditingMove(token: String) {
         val move = MoveParser.parseMove(token)
-        updateEditingSession(
-            feedback = "Move $token ajoute",
-        ) { current -> current.addMove(move) }
+        updateEditingSession { current -> current.addMove(move) }
         emitAnimationEvent(move)
     }
 
     private fun updateEditingSession(
-        feedback: String = "Sequence d'edition mise a jour",
-        unchangedFeedback: String = feedback,
         update: (EditingSession) -> EditingSession,
     ) {
         updateAndPersist { current ->
             val nextSession = update(current.editingSession)
-            if (nextSession == current.editingSession) {
-                return@updateAndPersist current.copy(
-                    homeUiState = current.homeUiState.copy(feedbackMessage = unchangedFeedback),
-                )
-            }
+            if (nextSession == current.editingSession) return@updateAndPersist current
             current.copy(
                 cubeState = MoveExecutor.apply(current.editingBaseCubeState, nextSession.sequence),
                 editingSession = nextSession,
-                homeUiState = current.homeUiState.copy(feedbackMessage = feedback),
+                playbackBaseCubeState = current.editingBaseCubeState,
+                playbackState = current.playbackState.copy(
+                    sequence = nextSession.sequence,
+                    currentIndex = nextSession.sequence.moves.size,
+                ),
             )
         }
     }
@@ -348,14 +448,27 @@ class SharedCubeViewModel(
                     current.playbackBaseCubeState,
                     MoveSequence(sequence.moves.take(nextIndex)),
                 ),
+                mainCubeState = if (current.homeMode == HomeMode.EDIT) {
+                    current.mainCubeState
+                } else {
+                    MoveExecutor.apply(
+                        current.playbackBaseCubeState,
+                        MoveSequence(sequence.moves.take(nextIndex)),
+                    )
+                },
                 playbackState = current.playbackState.copy(currentIndex = nextIndex),
             )
         }
     }
 
-    private fun updateFeedback(message: String) {
+    private fun updateFeedback(message: String, isError: Boolean = false) {
         updateAndPersist { current ->
-            current.copy(homeUiState = current.homeUiState.copy(feedbackMessage = message))
+            current.copy(
+                homeUiState = current.homeUiState.copy(
+                    feedbackMessage = message,
+                    feedbackIsError = isError,
+                ),
+            )
         }
     }
 
@@ -398,9 +511,18 @@ class SharedCubeViewModel(
     }
 
     private suspend fun persistSession(state: SharedCubeUiState) {
+        val preferences = settingsRepository?.loadPreferences()?.getOrNull()
+        if (preferences?.sessionPersistenceEnabled == false) {
+            cubeSessionRepository.clearSession()
+            return
+        }
         cubeSessionRepository.saveSession(
             LocalSessionSnapshot(
-                serializedCubeState = CubeSessionCodec.encode(state.cubeState),
+                serializedCubeState = if (preferences?.localCubeCacheEnabled == false) {
+                    null
+                } else {
+                    CubeSessionCodec.encode(state.cubeState)
+                },
                 activeRoute = state.activeRoute.name,
                 activeHomeMode = state.homeMode.name,
                 activeSequence = state.activeSequenceForSnapshot().normalizedNotation.ifBlank { null },
@@ -421,12 +543,22 @@ class SharedCubeViewModel(
 
     class Factory(
         private val cubeSessionRepository: CubeSessionRepository,
+        private val settingsRepository: SettingsRepository? = null,
         private val clockProvider: ClockProvider = SystemClockProvider,
     ) : ViewModelProvider.Factory {
+        constructor(
+            cubeSessionRepository: CubeSessionRepository,
+            clockProvider: ClockProvider,
+        ) : this(cubeSessionRepository, null, clockProvider)
+
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(SharedCubeViewModel::class.java)) {
-                return SharedCubeViewModel(cubeSessionRepository, clockProvider) as T
+                return SharedCubeViewModel(
+                    cubeSessionRepository = cubeSessionRepository,
+                    clockProvider = clockProvider,
+                    settingsRepository = settingsRepository,
+                ) as T
             }
             throw IllegalArgumentException("Unsupported ViewModel class: ${modelClass.name}")
         }

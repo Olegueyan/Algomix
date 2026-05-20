@@ -58,7 +58,7 @@ class LibraryViewModelTest {
         viewModel.deleteCollection(newCollection.id)
 
         assertTrue(repository.collections.none { it.id == newCollection.id })
-        assertEquals("Collection supprimee", viewModel.uiState.value.feedback?.message)
+        assertEquals("Collection supprimée", viewModel.uiState.value.feedback?.message)
     }
 
     @Test

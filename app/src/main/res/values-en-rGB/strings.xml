@@ -43,7 +43,10 @@
     <string name="home_delete_all_message">Delete the current sequence?</string>
     <string name="home_delete_all_confirm">Delete</string>
     <string name="home_delete_all_cancel">Cancel</string>
-    <string name="scan_title">Scan cube - N1</string>
+    <string name="home_lock_rotation">Lock rotation</string>
+    <string name="home_unlock_rotation">Unlock rotation</string>
+    <string name="home_reset_cube">Reset cube</string>
+    <string name="scan_title">Scan cube</string>
     <string name="scan_progress_format">Face %1$d/6 - %2$s</string>
     <string name="scan_capture_short">OK</string>
     <string name="scan_recapture">Recapture</string>

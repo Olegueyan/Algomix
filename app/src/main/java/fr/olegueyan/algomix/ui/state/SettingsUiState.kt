@@ -7,6 +7,7 @@ data class SettingsUiState(
     val preferences: UserPreferences = UserPreferences(),
     val cloudSession: CloudSession? = null,
     val isLoading: Boolean = false,
+    val isSyncing: Boolean = false,
     val feedbackMessage: String? = null,
     val isError: Boolean = false,
 ) {

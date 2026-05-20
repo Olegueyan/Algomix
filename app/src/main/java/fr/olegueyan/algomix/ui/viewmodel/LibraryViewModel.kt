@@ -104,20 +104,20 @@ class LibraryViewModel(
     }
 
     fun createCollection(name: String) {
-        runMutation(success = "Collection creee") {
+        runMutation(success = "Collection créée") {
             libraryRepository.saveCollection(LibraryCollection(CollectionId(newId()), name))
         }
     }
 
     fun createSheet(collectionId: CollectionId, name: String) {
-        runMutation(success = "Fiche creee") {
+        runMutation(success = "Fiche créée") {
             libraryRepository.saveSheet(AlgorithmSheet(SheetId(newId()), collectionId, name))
         }
     }
 
     fun createScramble(collectionId: CollectionId, name: String, sequence: String) {
-        runMutation(success = "Melange sauvegarde") {
-            val normalizedSequence = normalizeSequence(sequence) ?: return@runMutation validation("Sequence invalide")
+        runMutation(success = "Mélange sauvegardé") {
+            val normalizedSequence = normalizeSequence(sequence) ?: return@runMutation validation("Séquence invalide")
             libraryRepository.saveScramble(Scramble(ScrambleId(newId()), collectionId, name, normalizedSequence))
         }
     }
@@ -125,7 +125,7 @@ class LibraryViewModel(
     fun generateDraftScramble(length: Int = DEFAULT_SCRAMBLE_LENGTH) {
         mutableUiState.value = mutableUiState.value.copy(
             draftScrambleSequence = ScrambleGenerator.generate(length).normalizedNotation,
-            feedback = LibraryFeedback("Melange genere"),
+            feedback = LibraryFeedback("Mélange généré"),
         )
     }
 
@@ -161,12 +161,12 @@ class LibraryViewModel(
         sequence: String,
     ) {
         if (sequence.isBlank()) {
-            setError("Sequence vide")
+            setError("Séquence vide")
             return
         }
         when (target) {
             SaveEditTarget.EXISTING_SHEET -> {
-                val targetSheetId = sheetId ?: return setError("Selection de fiche requise")
+                val targetSheetId = sheetId ?: return setError("Sélection de fiche requise")
                 importAlgorithm(targetSheetId, name, sequence)
             }
             SaveEditTarget.NEW_SCRAMBLE -> createScramble(collectionId, name, sequence)
@@ -174,33 +174,33 @@ class LibraryViewModel(
     }
 
     fun renameCollection(collection: LibraryCollection, name: String) {
-        runMutation(success = "Collection renommee") {
+        runMutation(success = "Collection renommée") {
             libraryRepository.saveCollection(collection.copy(name = name))
         }
     }
 
     fun renameSheet(sheet: AlgorithmSheet, name: String) {
-        runMutation(success = "Fiche renommee") {
+        runMutation(success = "Fiche renommée") {
             libraryRepository.saveSheet(sheet.copy(name = name))
         }
     }
 
     fun renameScramble(scramble: Scramble, name: String) {
-        runMutation(success = "Melange renomme") {
+        runMutation(success = "Mélange renommé") {
             libraryRepository.saveScramble(scramble.copy(name = name))
         }
     }
 
     fun deleteCollection(collectionId: CollectionId) {
-        runMutation(success = "Collection supprimee") { libraryRepository.deleteCollection(collectionId) }
+        runMutation(success = "Collection supprimée") { libraryRepository.deleteCollection(collectionId) }
     }
 
     fun deleteSheet(sheetId: SheetId) {
-        runMutation(success = "Fiche supprimee") { libraryRepository.deleteSheet(sheetId) }
+        runMutation(success = "Fiche supprimée") { libraryRepository.deleteSheet(sheetId) }
     }
 
     fun deleteScramble(scrambleId: ScrambleId) {
-        runMutation(success = "Melange supprime") { libraryRepository.deleteScramble(scrambleId) }
+        runMutation(success = "Mélange supprimé") { libraryRepository.deleteScramble(scrambleId) }
     }
 
     fun setSheetTags(sheetId: SheetId, tagNames: List<String>) {
@@ -218,7 +218,7 @@ class LibraryViewModel(
     }
 
     fun selectLoadItem(item: LoadLibraryItemResult) {
-        mutableUiState.value = mutableUiState.value.copy(feedback = LibraryFeedback("Selection: ${item.name}"))
+        mutableUiState.value = mutableUiState.value.copy(feedback = LibraryFeedback("Sélection: ${item.name}"))
     }
 
     fun consumeFeedback() {

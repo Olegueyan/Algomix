@@ -108,13 +108,21 @@ class SharedCubeViewModelTest {
     }
 
     @Test
-    fun changingHomeModeKeepsCurrentCubeState() {
+    fun editModeUsesAnIsolatedCubeAndLeavingEditRestoresMainCube() {
         val viewModel = createViewModel()
         viewModel.setHomeMode(HomeMode.FREE)
         viewModel.applyMoveToken("R")
         val movedCube = viewModel.uiState.value.cubeState
 
         viewModel.setHomeMode(HomeMode.EDIT)
+
+        assertEquals(CubeState.solved(), viewModel.uiState.value.cubeState)
+        assertEquals(movedCube, viewModel.uiState.value.mainCubeState)
+
+        viewModel.applyMoveToken("U")
+        assertNotEquals(movedCube, viewModel.uiState.value.cubeState)
+
+        viewModel.setHomeMode(HomeMode.FREE)
 
         assertEquals(movedCube, viewModel.uiState.value.cubeState)
     }
@@ -195,18 +203,40 @@ class SharedCubeViewModelTest {
     }
 
     @Test
+    fun loadingSequenceInEditKeepsMainCubeUntouched() {
+        val viewModel = createViewModel()
+        viewModel.setHomeMode(HomeMode.FREE)
+        viewModel.applyMoveToken("R")
+        val mainCube = viewModel.uiState.value.cubeState
+
+        val sequence = MoveParser.parse("U F")
+        viewModel.loadEditingSequence(sequence)
+
+        assertEquals(HomeMode.EDIT, viewModel.uiState.value.homeMode)
+        assertEquals(CubeState.solved(), viewModel.uiState.value.cubeState)
+        assertEquals(sequence, viewModel.uiState.value.editingSession.sequence)
+        assertEquals(mainCube, viewModel.uiState.value.mainCubeState)
+
+        viewModel.playNext()
+        assertNotEquals(CubeState.solved(), viewModel.uiState.value.cubeState)
+
+        viewModel.setHomeMode(HomeMode.FREE)
+        assertEquals(mainCube, viewModel.uiState.value.cubeState)
+    }
+
+    @Test
     fun placeholderActionsExposeNonBlockingFeedback() {
         val viewModel = createViewModel()
 
         viewModel.requestLoadAlgorithm()
         assertEquals(
-            "Utilisez Charger algo pour ouvrir la selection",
+            "Utilisez Charger algo pour ouvrir la sélection",
             viewModel.uiState.value.homeUiState.feedbackMessage,
         )
 
         viewModel.requestSaveEditing()
         assertEquals(
-            "Utilisez Save en edition pour sauvegarder",
+            "Utilisez Save en édition pour sauvegarder",
             viewModel.uiState.value.homeUiState.feedbackMessage,
         )
     }
@@ -223,10 +253,10 @@ class SharedCubeViewModelTest {
         assertEquals("Aucun redo disponible", viewModel.uiState.value.homeUiState.feedbackMessage)
 
         viewModel.suppressLastEditingMove()
-        assertEquals("Aucun move a supprimer", viewModel.uiState.value.homeUiState.feedbackMessage)
+        assertEquals("Aucun mouvement à supprimer", viewModel.uiState.value.homeUiState.feedbackMessage)
 
         viewModel.deleteAllEditing()
-        assertEquals("Sequence deja vide", viewModel.uiState.value.homeUiState.feedbackMessage)
+        assertEquals("Séquence déjà vide", viewModel.uiState.value.homeUiState.feedbackMessage)
     }
 
     @Test
@@ -240,7 +270,7 @@ class SharedCubeViewModelTest {
 
         assertEquals(scannedCube, viewModel.uiState.value.cubeState)
         assertEquals(HomeMode.VISUALIZATION, viewModel.uiState.value.homeMode)
-        assertEquals("Cube scanne applique", viewModel.uiState.value.homeUiState.feedbackMessage)
+        assertEquals("Cube scanné appliqué", viewModel.uiState.value.homeUiState.feedbackMessage)
         assertEquals("VISUALIZATION", repository.savedSnapshot?.activeHomeMode)
     }
 

@@ -1,7 +1,6 @@
 package fr.olegueyan.algomix.ui.state
 
 enum class HomeMode {
-    VISUALIZATION,
     FREE,
     PLAY,
     EDIT,

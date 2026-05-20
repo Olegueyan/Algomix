@@ -1,5 +1,9 @@
 <resources>
     <dimen name="settings_dialog_padding">20dp</dimen>
     <dimen name="settings_dialog_spacing">6dp</dimen>
+    <dimen name="settings_body_text_threshold">15sp</dimen>
     <dimen name="scan_sticker_size">34dp</dimen>
+    <dimen name="home_cube_stage_min_height">140dp</dimen>
+    <dimen name="home_move_icon_size">24dp</dimen>
+    <dimen name="home_move_button_height">52dp</dimen>
 </resources>

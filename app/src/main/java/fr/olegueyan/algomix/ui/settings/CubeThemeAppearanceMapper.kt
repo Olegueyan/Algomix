@@ -5,17 +5,20 @@ import fr.olegueyan.algomix.ui.components.rubik.RubikCubeAppearance
 
 object CubeThemeAppearanceMapper {
     fun map(theme: CubeTheme): RubikCubeAppearance =
+        map(theme, RubikCubeAppearance.DEFAULT_BACKGROUND_COLOR)
+
+    fun map(theme: CubeTheme, backgroundColor: Int): RubikCubeAppearance =
         when (theme) {
             CubeTheme.FILLED -> RubikCubeAppearance(
-                backgroundColor = 0xFFF4F1EA.toInt(),
+                backgroundColor = backgroundColor,
                 bodyColor = 0xFF101114.toInt(),
             )
             CubeTheme.STICKER_ON_BLACK -> RubikCubeAppearance(
-                backgroundColor = 0xFF12151D.toInt(),
+                backgroundColor = backgroundColor,
                 bodyColor = 0xFF050609.toInt(),
             )
             CubeTheme.CARBON -> RubikCubeAppearance(
-                backgroundColor = 0xFFE8ECF0.toInt(),
+                backgroundColor = backgroundColor,
                 bodyColor = 0xFF23272F.toInt(),
             )
         }

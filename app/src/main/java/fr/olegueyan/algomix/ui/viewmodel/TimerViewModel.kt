@@ -65,7 +65,7 @@ class TimerViewModel(
             runState = TimerRunState.IDLE,
             durationMillis = 0,
             durationLabel = formatDuration(0),
-            feedbackMessage = "Timer remis a zero",
+            feedbackMessage = "Timer remis à zéro",
             isError = false,
         )
     }
@@ -95,7 +95,7 @@ class TimerViewModel(
                         runState = TimerRunState.IDLE,
                         durationMillis = 0,
                         durationLabel = formatDuration(0),
-                        feedbackMessage = "Temps sauvegarde",
+                        feedbackMessage = "Temps sauvegardé",
                         isError = false,
                     )
                 }
@@ -110,7 +110,7 @@ class TimerViewModel(
                 is AppResult.Success -> {
                     refreshHistory()
                     mutableUiState.value = mutableUiState.value.copy(
-                        feedbackMessage = "Temps supprime",
+                        feedbackMessage = "Temps supprimé",
                         isError = false,
                     )
                 }
@@ -125,7 +125,7 @@ class TimerViewModel(
                 is AppResult.Success -> {
                     refreshHistory()
                     mutableUiState.value = mutableUiState.value.copy(
-                        feedbackMessage = "Historique vide",
+                        feedbackMessage = "Historique vidé",
                         isError = false,
                     )
                 }

@@ -4,10 +4,12 @@ import fr.olegueyan.algomix.application.core.AppError
 import fr.olegueyan.algomix.application.core.AppResult
 import fr.olegueyan.algomix.application.port.CloudAuthGateway
 import fr.olegueyan.algomix.application.port.CloudSyncGateway
+import fr.olegueyan.algomix.application.port.CubeSessionRepository
 import fr.olegueyan.algomix.application.port.SettingsRepository
 import fr.olegueyan.algomix.domain.cloud.CloudSession
 import fr.olegueyan.algomix.domain.cloud.CloudUser
 import fr.olegueyan.algomix.domain.cloud.SyncSummary
+import fr.olegueyan.algomix.domain.session.LocalSessionSnapshot
 import fr.olegueyan.algomix.domain.settings.AppAppearance
 import fr.olegueyan.algomix.domain.settings.CubeTheme
 import fr.olegueyan.algomix.domain.settings.UserPreferences
@@ -46,7 +48,30 @@ class SettingsViewModelTest {
         assertEquals(CubeTheme.CARBON, repository.preferences.cubeTheme)
         assertFalse(repository.preferences.localCubeCacheEnabled)
         assertFalse(repository.preferences.sessionPersistenceEnabled)
-        assertEquals("Preferences sauvegardees", viewModel.uiState.value.feedbackMessage)
+        assertEquals("Préférences sauvegardées", viewModel.uiState.value.feedbackMessage)
+    }
+
+    @Test
+    fun persistenceTogglesClearSessionOrSerializedCube() {
+        val cubeSessionRepository = FakeCubeSessionRepository(
+            loadedSnapshot = LocalSessionSnapshot(
+                serializedCubeState = "cube",
+                activeRoute = "HOME",
+                activeHomeMode = "VISUALIZATION",
+                activeSequence = null,
+                playbackIndex = 0,
+                updatedAt = Instant.EPOCH,
+            ),
+        )
+        val viewModel = createViewModel(cubeSessionRepository = cubeSessionRepository)
+
+        viewModel.setLocalCubeCacheEnabled(false)
+
+        assertNull(cubeSessionRepository.savedSnapshot?.serializedCubeState)
+
+        viewModel.setSessionPersistenceEnabled(false)
+
+        assertEquals(1, cubeSessionRepository.clearCalls)
     }
 
     @Test
@@ -75,7 +100,7 @@ class SettingsViewModelTest {
         assertEquals(0, authGateway.signInCalls)
 
         viewModel.createAccount("Martin", "Alex", "new@example.com", "secret", "different")
-        assertEquals("Confirmation differente", viewModel.uiState.value.feedbackMessage)
+        assertEquals("Confirmation différente", viewModel.uiState.value.feedbackMessage)
         assertEquals(0, authGateway.createAccountCalls)
     }
 
@@ -86,7 +111,7 @@ class SettingsViewModelTest {
         viewModel.signIn("alex@example.com", "password")
 
         assertTrue(viewModel.uiState.value.isError)
-        assertEquals("Backend cloud non configure", viewModel.uiState.value.feedbackMessage)
+        assertEquals("Backend cloud non configuré", viewModel.uiState.value.feedbackMessage)
     }
 
     @Test
@@ -115,7 +140,7 @@ class SettingsViewModelTest {
 
         assertEquals(1, syncGateway.recoverCalls)
         assertEquals(1, syncGateway.purgeCalls)
-        assertEquals("Cloud vide: 3 suppressions", viewModel.uiState.value.feedbackMessage)
+        assertEquals("Cloud vidé: 3 suppressions", viewModel.uiState.value.feedbackMessage)
     }
 
     @Test
@@ -124,22 +149,24 @@ class SettingsViewModelTest {
         val viewModel = createViewModel(authGateway = authGateway)
 
         viewModel.changePassword("old", "new", "different")
-        assertEquals("Confirmation differente", viewModel.uiState.value.feedbackMessage)
+        assertEquals("Confirmation différente", viewModel.uiState.value.feedbackMessage)
         assertEquals(0, authGateway.changePasswordCalls)
 
         viewModel.changePassword("old", "new", "new")
 
         assertEquals(1, authGateway.changePasswordCalls)
-        assertEquals("Mot de passe mis a jour", viewModel.uiState.value.feedbackMessage)
+        assertEquals("Mot de passe mis à jour", viewModel.uiState.value.feedbackMessage)
     }
 
     private fun createViewModel(
         repository: FakeSettingsRepository = FakeSettingsRepository(),
         authGateway: CloudAuthGateway? = null,
         syncGateway: CloudSyncGateway? = null,
+        cubeSessionRepository: CubeSessionRepository? = null,
     ): SettingsViewModel =
         SettingsViewModel(
             settingsRepository = repository,
+            cubeSessionRepository = cubeSessionRepository,
             cloudAuthGateway = authGateway,
             cloudSyncGateway = syncGateway,
             taskLauncher = { block -> runBlocking { block() } },
@@ -215,6 +242,26 @@ class SettingsViewModelTest {
         override suspend fun purgeRemoteOnly(): AppResult<SyncSummary> {
             purgeCalls += 1
             return AppResult.success(SyncSummary(deletedRemoteItems = 3))
+        }
+    }
+
+    private class FakeCubeSessionRepository(
+        private val loadedSnapshot: LocalSessionSnapshot? = null,
+    ) : CubeSessionRepository {
+        var savedSnapshot: LocalSessionSnapshot? = null
+        var clearCalls = 0
+
+        override suspend fun loadSession(): AppResult<LocalSessionSnapshot?> =
+            AppResult.success(loadedSnapshot)
+
+        override suspend fun saveSession(snapshot: LocalSessionSnapshot): AppResult<Unit> {
+            savedSnapshot = snapshot
+            return AppResult.success(Unit)
+        }
+
+        override suspend fun clearSession(): AppResult<Unit> {
+            clearCalls += 1
+            return AppResult.success(Unit)
         }
     }
 
