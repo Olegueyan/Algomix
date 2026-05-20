@@ -27,9 +27,20 @@ class SupabaseAuthGateway(
     private val config: SupabaseConfig,
     private val httpClient: HttpClient = defaultSupabaseHttpClient(),
     private val clockProvider: ClockProvider = SystemClockProvider,
+    private val tokenStore: SupabaseTokenStore? = null,
 ) : CloudAuthGateway {
     private var session: CloudSession? = SupabaseRuntimeSession.cloudSession
     private var accessToken: String? = SupabaseRuntimeSession.accessToken
+
+    init {
+        if (accessToken == null) {
+            val stored = tokenStore?.load()
+            if (stored != null) {
+                accessToken = stored
+                SupabaseRuntimeSession.accessToken = stored
+            }
+        }
+    }
 
     internal fun currentAccessToken(): String? = accessToken
 
@@ -116,6 +127,7 @@ class SupabaseAuthGateway(
             session = null
             accessToken = null
             SupabaseRuntimeSession.clear()
+            tokenStore?.clear()
             AppResult.success(Unit)
         }
 
@@ -146,6 +158,7 @@ class SupabaseAuthGateway(
         )
         SupabaseRuntimeSession.accessToken = accessToken
         SupabaseRuntimeSession.cloudSession = session
+        accessToken?.let { tokenStore?.save(it) }
         return session ?: error("Session should have been parsed")
     }
 

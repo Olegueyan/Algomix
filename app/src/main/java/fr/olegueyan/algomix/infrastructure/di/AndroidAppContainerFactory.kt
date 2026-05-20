@@ -12,6 +12,7 @@ import fr.olegueyan.algomix.application.port.SettingsRepository
 import fr.olegueyan.algomix.application.port.TimerRepository
 import fr.olegueyan.algomix.infrastructure.cloud.supabase.SupabaseClientFactory
 import fr.olegueyan.algomix.infrastructure.cloud.supabase.SupabaseConfig
+import fr.olegueyan.algomix.infrastructure.cloud.supabase.SupabaseTokenStore
 import fr.olegueyan.algomix.infrastructure.export.LocalPdfExporter
 import fr.olegueyan.algomix.infrastructure.persistence.local.AlgomixDatabase
 import fr.olegueyan.algomix.infrastructure.persistence.local.LocalCubeSessionRepository
@@ -47,6 +48,9 @@ object AndroidAppContainerFactory {
             produceFile = { appContext.preferencesDataStoreFile("local_session") },
         )
         val localSettingsRepository = LocalSettingsRepository(settingsDataStore, dao, clockProvider)
+        val tokenStore = SupabaseTokenStore(
+            appContext.getSharedPreferences("supabase_auth", android.content.Context.MODE_PRIVATE),
+        )
         val supabaseGateways = SupabaseClientFactory.createGateways(
             config = SupabaseConfig(
                 url = BuildConfig.SUPABASE_URL,
@@ -55,6 +59,7 @@ object AndroidAppContainerFactory {
             dao = dao,
             settingsRepository = localSettingsRepository,
             clockProvider = clockProvider,
+            tokenStore = tokenStore,
         )
         val scheduler = supabaseGateways?.let { WorkManagerCloudSyncScheduler(appContext) }
         val libraryRepository: LibraryRepository =

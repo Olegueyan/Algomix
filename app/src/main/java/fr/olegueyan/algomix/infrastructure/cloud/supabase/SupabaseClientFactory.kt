@@ -18,11 +18,12 @@ object SupabaseClientFactory {
         settingsRepository: LocalSettingsRepository,
         clockProvider: ClockProvider = SystemClockProvider,
         httpClient: HttpClient = defaultSupabaseHttpClient(),
+        tokenStore: SupabaseTokenStore? = null,
     ): SupabaseGateways? {
         if (!config.isConfigured) {
             return null
         }
-        val authGateway = SupabaseAuthGateway(config, httpClient, clockProvider)
+        val authGateway = SupabaseAuthGateway(config, httpClient, clockProvider, tokenStore)
         val remoteDataSource = SupabaseRestRemoteDataSource(
             config = config,
             accessTokenProvider = authGateway::currentAccessToken,
