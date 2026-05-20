@@ -82,6 +82,23 @@ data class CubeState internal constructor(
             return CubeState(cubelets.sortedByPosition())
         }
 
+        fun fromPartialFacelets(faceStickers: Map<Int, List<FaceColor?>>): CubeState {
+            if (faceStickers.isEmpty()) return solved()
+            val cubelets = solved().cubelets.toMutableList()
+            faceStickers.forEach { (faceIndex, stickers) ->
+                val face = FaceletFace.entries.getOrNull(faceIndex) ?: return@forEach
+                faceCoordinates(face).forEachIndexed { stickerIndex, coordinate ->
+                    val color = stickers.getOrNull(stickerIndex) ?: return@forEachIndexed
+                    val idx = cubelets.indexOfFirst { it.position == coordinate }
+                    if (idx >= 0) {
+                        val c = cubelets[idx]
+                        cubelets[idx] = Cubelet(c.position, c.stickers + (face.normal to color))
+                    }
+                }
+            }
+            return CubeState(cubelets.sortedByPosition())
+        }
+
         internal fun fromCubelets(cubelets: List<Cubelet>): CubeState =
             CubeState(cubelets.sortedByPosition())
     }

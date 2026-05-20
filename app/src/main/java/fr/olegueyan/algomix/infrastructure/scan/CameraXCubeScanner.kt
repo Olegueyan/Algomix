@@ -13,10 +13,28 @@ import fr.olegueyan.algomix.domain.scan.ScanFaceDraft
 import fr.olegueyan.algomix.domain.scan.ScanFaceletAssembler
 import fr.olegueyan.algomix.domain.scan.ScanFaceletAssembly
 import fr.olegueyan.algomix.domain.scan.ScanSessionDraft
+import fr.olegueyan.algomix.domain.settings.CubeTheme
+import org.opencv.android.OpenCVLoader
+import org.opencv.android.Utils
+import org.opencv.core.Core
+import org.opencv.core.Mat
+import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc
+import kotlin.math.roundToInt
 
 class CameraXCubeScanner(
     private val clockProvider: ClockProvider = SystemClockProvider,
 ) : CubeScanner {
+
+    var cubeTheme: CubeTheme = CubeTheme.STICKER_ON_BLACK
+
+    private val sampleInset: Float
+        get() = when (cubeTheme) {
+            CubeTheme.STICKER_ON_BLACK -> INSET_STICKER
+            CubeTheme.CARBON           -> INSET_CARBON
+            CubeTheme.FILLED           -> INSET_FILLED
+        }
+
     override suspend fun startSession(): AppResult<ScanSessionDraft> =
         AppResult.success(ScanSessionDraft())
 
@@ -40,10 +58,7 @@ class CameraXCubeScanner(
     override suspend fun validateSession(session: ScanSessionDraft): AppResult<Unit> =
         ScanFaceletAssembler.assemble(session).toAppResult()
 
-    fun extractFaceFromBitmap(
-        bitmap: Bitmap,
-        faceIndex: Int,
-    ): ScanFaceDraft {
+    fun extractFaceFromBitmap(bitmap: Bitmap, faceIndex: Int): ScanFaceDraft {
         val sampledCells = sampleCells(bitmap)
         return ScanFaceDraft(
             faceIndex = faceIndex,
@@ -53,63 +68,78 @@ class CameraXCubeScanner(
     }
 
     private fun sampleCells(bitmap: Bitmap): List<RgbColor> {
+        OpenCVLoader.initLocal()
+
+        val rgbaMat = Mat()
+        Utils.bitmapToMat(bitmap, rgbaMat)
+
+        val rgbMat = Mat()
+        Imgproc.cvtColor(rgbaMat, rgbMat, Imgproc.COLOR_RGBA2RGB)
+        Imgproc.GaussianBlur(rgbMat, rgbMat, Size(BLUR_KERNEL, BLUR_KERNEL), 0.0)
+
+        val hsvMat = Mat()
+        Imgproc.cvtColor(rgbMat, hsvMat, Imgproc.COLOR_RGB2HSV)
+
         val squareSize = minOf(bitmap.width, bitmap.height) * GRID_SIZE_RATIO
-        val startX = (bitmap.width - squareSize) / 2
-        val startY = (bitmap.height - squareSize) / 2
-        val cellSize = squareSize / GRID_SIZE.toFloat()
+        val startX = (bitmap.width - squareSize) / 2.0
+        val startY = (bitmap.height - squareSize) / 2.0
+        val cellSize = squareSize / GRID_SIZE
+        val inset = cellSize * sampleInset
+
         return (0 until GRID_SIZE).flatMap { row ->
-            (0 until GRID_SIZE).map { column ->
-                bitmap.averageColor(
-                    left = (startX + column * cellSize + cellSize * SAMPLE_INSET).toNearestPixel(),
-                    top = (startY + row * cellSize + cellSize * SAMPLE_INSET).toNearestPixel(),
-                    right = (startX + (column + 1) * cellSize - cellSize * SAMPLE_INSET).toNearestPixel(),
-                    bottom = (startY + (row + 1) * cellSize - cellSize * SAMPLE_INSET).toNearestPixel(),
-                )
+            (0 until GRID_SIZE).map { col ->
+                val l = (startX + col * cellSize + inset).toInt().coerceAtLeast(0)
+                val t = (startY + row * cellSize + inset).toInt().coerceAtLeast(0)
+                val r = (startX + (col + 1) * cellSize - inset).toInt().coerceAtMost(bitmap.width)
+                val b = (startY + (row + 1) * cellSize - inset).toInt().coerceAtMost(bitmap.height)
+                val roi = hsvMat.submat(t, b, l, r)
+                val mean = Core.mean(roi)
+                hsvToRgb(mean.`val`[0].toFloat(), mean.`val`[1].toFloat(), mean.`val`[2].toFloat())
             }
         }
     }
 
-    private fun Bitmap.averageColor(
-        left: Int,
-        top: Int,
-        right: Int,
-        bottom: Int,
-    ): RgbColor {
-        var red = 0L
-        var green = 0L
-        var blue = 0L
-        var count = 0L
-        for (y in top.coerceAtLeast(0) until bottom.coerceAtMost(height)) {
-            for (x in left.coerceAtLeast(0) until right.coerceAtMost(width)) {
-                val pixel = getPixel(x, y)
-                red += android.graphics.Color.red(pixel)
-                green += android.graphics.Color.green(pixel)
-                blue += android.graphics.Color.blue(pixel)
-                count++
-            }
+    // OpenCV HSV scale: H=0-180 (half degrees), S=0-255, V=0-255.
+    // Convert to standard H=0-360, S=0-1, V=0-1 before HSV→RGB.
+    private fun hsvToRgb(hOcv: Float, sOcv: Float, vOcv: Float): RgbColor {
+        val h = hOcv * 2f
+        val s = sOcv / 255f
+        val v = vOcv / 255f
+        if (s == 0f) {
+            val gray = (v * 255f).roundToInt().coerceIn(0, 255)
+            return RgbColor(gray, gray, gray)
         }
-        val safeCount = count.coerceAtLeast(1L)
+        val sector = h / 60f
+        val i = sector.toInt() % 6
+        val f = sector - sector.toInt()
+        val p = v * (1f - s)
+        val q = v * (1f - f * s)
+        val t = v * (1f - (1f - f) * s)
+        val (r, g, b) = when (i) {
+            0    -> Triple(v, t, p)
+            1    -> Triple(q, v, p)
+            2    -> Triple(p, v, t)
+            3    -> Triple(p, q, v)
+            4    -> Triple(t, p, v)
+            else -> Triple(v, p, q)
+        }
         return RgbColor(
-            red = (red / safeCount).toInt(),
-            green = (green / safeCount).toInt(),
-            blue = (blue / safeCount).toInt(),
+            red   = (r * 255f).roundToInt().coerceIn(0, 255),
+            green = (g * 255f).roundToInt().coerceIn(0, 255),
+            blue  = (b * 255f).roundToInt().coerceIn(0, 255),
         )
     }
 
     private fun ScanFaceletAssembly.toAppResult(): AppResult<Unit> =
-        if (isValid) {
-            AppResult.success(Unit)
-        } else {
-            AppResult.failure(AppError.Validation(errorMessage))
-        }
-
-    private fun Float.toNearestPixel(): Int =
-        (this + HALF_PIXEL).toInt()
+        if (isValid) AppResult.success(Unit)
+        else AppResult.failure(AppError.Validation(errorMessage))
 
     private companion object {
         const val GRID_SIZE = 3
         const val GRID_SIZE_RATIO = 0.82f
-        const val SAMPLE_INSET = 0.28f
-        const val HALF_PIXEL = 0.5f
+        const val BLUR_KERNEL = 7.0
+        const val INSET_STICKER = 0.28f
+        const val INSET_CARBON  = 0.20f
+        const val INSET_FILLED  = 0.12f
     }
 }

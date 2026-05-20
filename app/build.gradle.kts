@@ -124,6 +124,7 @@ dependencies {
     implementation(libs.supabase.auth)
     implementation(libs.supabase.postgrest)
     implementation(libs.ktor.client.android)
+    implementation(libs.opencv)
     ksp(libs.androidx.room.compiler)
     detektPlugins(libs.detekt.formatting)
 

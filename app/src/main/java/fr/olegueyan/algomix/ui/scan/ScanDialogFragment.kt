@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.GridLayout
+import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -36,9 +37,11 @@ class ScanDialogFragment : DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val scannerResult = (requireActivity() as MainActivity).appContainer.cubeScanner()
+        val activity = requireActivity() as MainActivity
+        val scannerResult = activity.appContainer.cubeScanner()
         scanner = scannerResult.getOrNull() ?: error("CubeScanner is not configured")
         cameraScanner = scanner as? CameraXCubeScanner ?: error("Camera scanner is not configured")
+        cameraScanner.cubeTheme = activity.settingsViewModel.uiState.value.preferences.cubeTheme
         setStyle(STYLE_NORMAL, android.R.style.Theme_Material_NoActionBar)
     }
 
@@ -82,7 +85,7 @@ class ScanDialogFragment : DialogFragment() {
 
     private fun bindActions() {
         val currentBinding = binding ?: return
-        currentBinding.scanCancelButton.setOnClickListener { dismiss() }
+        currentBinding.scanCloseButton.setOnClickListener { dismiss() }
         currentBinding.scanCaptureButton.setOnClickListener { captureCurrentFace() }
         currentBinding.scanRecaptureButton.setOnClickListener {
             currentDraft = null
@@ -137,7 +140,6 @@ class ScanDialogFragment : DialogFragment() {
             return
         }
         currentDraft = cameraScanner.extractFaceFromBitmap(bitmap, session.currentFaceIndex)
-        showFeedback(getString(R.string.scan_face_saved))
         render()
     }
 
@@ -194,6 +196,7 @@ class ScanDialogFragment : DialogFragment() {
             session.currentFace.name,
         )
         renderStickerPreview(currentDraft ?: session.face(session.currentFaceIndex))
+        currentBinding.scanCubePreview.render(session, currentDraft)
     }
 
     private fun renderStickerPreview(faceDraft: ScanFaceDraft?) {
@@ -236,9 +239,9 @@ class ScanDialogFragment : DialogFragment() {
     }
 
     private fun showFeedback(message: String?) {
-        val currentBinding = binding ?: return
-        currentBinding.scanFeedbackText.text = message.orEmpty()
-        currentBinding.scanFeedbackText.visibility = if (message == null) View.GONE else View.VISIBLE
+        if (message != null) {
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun FaceColor.toAndroidColor(): Int =

@@ -77,7 +77,7 @@ Lecture du schéma:
 | Persistance locale | Room, KSP, DataStore Preferences | Données durables locales, préférences et snapshot de session. |
 | Cloud | Supabase Kotlin Auth, Supabase PostgREST, Ktor Android | Auth email/password, récupération et synchronisation des données cloud. |
 | Sync | WorkManager | Push automatique des mutations locales via outbox. |
-| Scan | CameraX | Preview caméra, analyse d'image et capture des faces. |
+| Scan | CameraX, OpenCV 4.9 | Preview caméra, traitement d'image HSV, flou gaussien et capture des six faces. |
 | Export | `PdfDocument`, FileProvider | Génération et partage local de fiches PDF. |
 | Rendu | OpenGL ES | Affichage 3D interactif du cube. |
 | Qualité | JUnit, Robolectric, Espresso, Detekt, Android Lint | Tests unitaires, tests Robolectric ciblés, tests instrumentés Espresso, format, analyse statique et lint. |
