@@ -26,7 +26,7 @@ class SharedCubeViewModelTest {
 
         assertEquals(CubeState.solved(), state.cubeState)
         assertEquals(MainRoute.HOME, state.activeRoute)
-        assertEquals(HomeMode.VISUALIZATION, state.homeMode)
+        assertEquals(HomeMode.FREE, state.homeMode)
         assertEquals(0, state.playbackState.currentIndex)
     }
 
@@ -94,7 +94,7 @@ class SharedCubeViewModelTest {
             loadedSnapshot = LocalSessionSnapshot(
                 serializedCubeState = "invalid",
                 activeRoute = "HOME",
-                activeHomeMode = "VISUALIZATION",
+                activeHomeMode = "FREE",
                 activeSequence = "R",
                 playbackIndex = 1,
                 updatedAt = Instant.EPOCH,
@@ -117,7 +117,7 @@ class SharedCubeViewModelTest {
         viewModel.setHomeMode(HomeMode.EDIT)
 
         assertEquals(CubeState.solved(), viewModel.uiState.value.cubeState)
-        assertEquals(movedCube, viewModel.uiState.value.mainCubeState)
+        assertEquals(movedCube, viewModel.uiState.value.freeCubeState)
 
         viewModel.applyMoveToken("U")
         assertNotEquals(movedCube, viewModel.uiState.value.cubeState)
@@ -139,25 +139,22 @@ class SharedCubeViewModelTest {
     }
 
     @Test
-    fun scrambleChangesCubeAndPreparesPlaybackSequence() {
+    fun scrambleChangesOnlyCurrentModeCubeWithoutPreparingPlaybackSequence() {
         val viewModel = createViewModel()
 
         viewModel.scramble(length = 8)
 
         val state = viewModel.uiState.value
         assertNotEquals(CubeState.solved(), state.cubeState)
-        assertEquals(8, state.playbackState.sequence.moves.size)
-        assertEquals(8, state.playbackState.currentIndex)
-        assertEquals(
-            state.playbackState.sequence,
-            MoveParser.parse(state.playbackState.sequence.normalizedNotation),
-        )
+        assertTrue(state.playbackState.sequence.isEmpty)
+        assertEquals(0, state.playbackState.currentIndex)
     }
 
     @Test
     fun playbackNextPreviousResetLoopAndSpeedUpdateState() {
         val viewModel = createViewModel()
         viewModel.loadPlaybackSequence(MoveParser.parse("R U"), CubeState.solved())
+        viewModel.setHomeMode(HomeMode.PLAY)
 
         viewModel.playNext()
         assertEquals(1, viewModel.uiState.value.playbackState.currentIndex)
@@ -170,6 +167,11 @@ class SharedCubeViewModelTest {
         viewModel.playNext()
         viewModel.resetPlayback()
         assertEquals(0, viewModel.uiState.value.playbackState.currentIndex)
+        viewModel.playNext()
+        viewModel.clearPlaybackSequence()
+        assertTrue(viewModel.uiState.value.playbackState.sequence.isEmpty)
+        assertEquals(0, viewModel.uiState.value.playbackState.currentIndex)
+        assertEquals(CubeState.solved(), viewModel.uiState.value.cubeState)
 
         viewModel.toggleLoop()
         viewModel.cyclePlaybackSpeed()
@@ -213,11 +215,11 @@ class SharedCubeViewModelTest {
         viewModel.loadEditingSequence(sequence)
 
         assertEquals(HomeMode.EDIT, viewModel.uiState.value.homeMode)
-        assertEquals(CubeState.solved(), viewModel.uiState.value.cubeState)
+        assertEquals(MoveExecutor.apply(CubeState.solved(), sequence), viewModel.uiState.value.cubeState)
         assertEquals(sequence, viewModel.uiState.value.editingSession.sequence)
-        assertEquals(mainCube, viewModel.uiState.value.mainCubeState)
+        assertEquals(mainCube, viewModel.uiState.value.freeCubeState)
 
-        viewModel.playNext()
+        viewModel.applyMoveToken("R")
         assertNotEquals(CubeState.solved(), viewModel.uiState.value.cubeState)
 
         viewModel.setHomeMode(HomeMode.FREE)
@@ -260,7 +262,7 @@ class SharedCubeViewModelTest {
     }
 
     @Test
-    fun applyScannedCubeReplacesSharedCubeAndReturnsVisualizationMode() {
+    fun applyScannedCubeReplacesCurrentModeCubeWithoutChangingMode() {
         val repository = FakeCubeSessionRepository()
         val viewModel = createViewModel(repository)
         val scannedCube = MoveExecutor.apply(CubeState.solved(), MoveParser.parse("R"))
@@ -269,9 +271,9 @@ class SharedCubeViewModelTest {
         viewModel.applyScannedCube(scannedCube)
 
         assertEquals(scannedCube, viewModel.uiState.value.cubeState)
-        assertEquals(HomeMode.VISUALIZATION, viewModel.uiState.value.homeMode)
+        assertEquals(HomeMode.EDIT, viewModel.uiState.value.homeMode)
         assertEquals("Cube scanné appliqué", viewModel.uiState.value.homeUiState.feedbackMessage)
-        assertEquals("VISUALIZATION", repository.savedSnapshot?.activeHomeMode)
+        assertEquals("EDIT", repository.savedSnapshot?.activeHomeMode)
     }
 
     private fun createViewModel(

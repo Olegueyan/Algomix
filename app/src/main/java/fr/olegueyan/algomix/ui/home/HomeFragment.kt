@@ -35,11 +35,13 @@ import fr.olegueyan.algomix.domain.library.Scramble
 import fr.olegueyan.algomix.domain.library.ScrambleId
 import fr.olegueyan.algomix.domain.settings.AppAppearance
 import fr.olegueyan.algomix.ui.components.common.MoveIconRegistry
+import fr.olegueyan.algomix.ui.components.rubik.RubikCubeView
 import fr.olegueyan.algomix.ui.scan.ScanDialogFragment
 import fr.olegueyan.algomix.ui.settings.CubeThemeAppearanceMapper
 import fr.olegueyan.algomix.ui.state.HomeMode
 import fr.olegueyan.algomix.ui.state.MoveKeyboardCategory
 import fr.olegueyan.algomix.ui.state.SharedCubeUiState
+import fr.olegueyan.algomix.ui.theme.AlgomixPalettes
 import fr.olegueyan.algomix.ui.viewmodel.SharedCubeViewModel
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -83,12 +85,14 @@ class HomeFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding?.cubeView?.keepScreenOn = true
+        binding?.allCubeViews()?.forEach { cubeView ->
+            cubeView.keepScreenOn = true
+            cubeView.onDoubleTapResetListener = {
+                cubeView.resetRotation(sharedCubeViewModel.computeResetTargetQuaternion())
+            }
+        }
         bindActions()
         bindStaticIcons()
-        binding?.cubeView?.onDoubleTapResetListener = {
-            binding?.cubeView?.resetRotation(sharedCubeViewModel.computeResetTargetQuaternion())
-        }
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedCubeViewModel.uiState.collect { state ->
@@ -99,7 +103,8 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedCubeViewModel.animationEvents.collect { event ->
-                    binding?.cubeView?.playMove(event.move, event.finalState)
+                    binding?.activeCubeView(sharedCubeViewModel.uiState.value.homeMode)
+                        ?.playMove(event.move, event.finalState)
                 }
             }
         }
@@ -108,8 +113,8 @@ class HomeFragment : Fragment() {
                 (requireActivity() as MainActivity).settingsViewModel.uiState.collect { state ->
                     applyHomeColors(state.preferences.appAppearance)
                     val background = state.preferences.appAppearance.backgroundColor()
-                    binding?.cubeView?.appearance =
-                        CubeThemeAppearanceMapper.map(state.preferences.cubeTheme, background)
+                    val appearance = CubeThemeAppearanceMapper.map(state.preferences.cubeTheme, background)
+                    binding?.allCubeViews()?.forEach { cubeView -> cubeView.appearance = appearance }
                 }
             }
         }
@@ -117,11 +122,11 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        binding?.cubeView?.onResume()
+        binding?.allCubeViews()?.forEach(RubikCubeView::onResume)
     }
 
     override fun onPause() {
-        binding?.cubeView?.onPause()
+        binding?.allCubeViews()?.forEach(RubikCubeView::onPause)
         super.onPause()
     }
 
@@ -154,6 +159,7 @@ class HomeFragment : Fragment() {
         currentBinding.playAutoButton.setOnClickListener { sharedCubeViewModel.toggleAutoPlay() }
         currentBinding.playLoopButton.setOnClickListener { sharedCubeViewModel.toggleLoop() }
         currentBinding.playResetButton.setOnClickListener { sharedCubeViewModel.resetPlayback() }
+        currentBinding.playClearButton.setOnClickListener { sharedCubeViewModel.clearPlaybackSequence() }
         currentBinding.lockRotationButton.setOnClickListener { sharedCubeViewModel.toggleRotationLock() }
         currentBinding.resetCubeButton.setOnClickListener { confirmResetCube() }
         currentBinding.editSaveButton.setOnClickListener { showSaveEditingDialog() }
@@ -178,6 +184,7 @@ class HomeFragment : Fragment() {
         currentBinding.playAutoButton.setIconResource(android.R.drawable.ic_media_play)
         currentBinding.playLoopButton.setIconResource(android.R.drawable.ic_popup_sync)
         currentBinding.playResetButton.setIconResource(android.R.drawable.ic_menu_revert)
+        currentBinding.playClearButton.setIconResource(android.R.drawable.ic_menu_delete)
         currentBinding.editSaveButton.setIconResource(android.R.drawable.ic_menu_save)
         currentBinding.editUndoButton.setIconResource(android.R.drawable.ic_menu_revert)
         currentBinding.editRedoButton.setIconResource(android.R.drawable.ic_menu_rotate)
@@ -203,8 +210,15 @@ class HomeFragment : Fragment() {
 
     private fun render(state: SharedCubeUiState) {
         val currentBinding = binding ?: return
-        currentBinding.cubeView.setRotationLocked(state.rotationLocked)
-        currentBinding.cubeView.renderCube(state.cubeState)
+        currentBinding.freeCubeView.visibility = (state.homeMode == HomeMode.FREE).toVisibility()
+        currentBinding.playCubeView.visibility = (state.homeMode == HomeMode.PLAY).toVisibility()
+        currentBinding.editCubeView.visibility = (state.homeMode == HomeMode.EDIT).toVisibility()
+        currentBinding.freeCubeView.setRotationLocked(state.freeRotationLocked)
+        currentBinding.playCubeView.setRotationLocked(state.playRotationLocked)
+        currentBinding.editCubeView.setRotationLocked(state.editRotationLocked)
+        currentBinding.freeCubeView.renderCube(state.freeCubeState)
+        currentBinding.playCubeView.renderCube(state.playCubeState)
+        currentBinding.editCubeView.renderCube(state.editCubeState)
         currentBinding.lockRotationButton.setIconResource(
             if (state.rotationLocked) R.drawable.ic_cube_lock else R.drawable.ic_cube_lock_open,
         )
@@ -215,10 +229,19 @@ class HomeFragment : Fragment() {
 
         val keyboardVisible = state.homeMode == HomeMode.FREE || state.homeMode == HomeMode.EDIT
         val playVisible = state.homeMode == HomeMode.PLAY || state.homeMode == HomeMode.EDIT
-        currentBinding.quickActionsGroup.visibility = state.homeMode.quickActionsVisibility()
+        val playbackControlsVisible = state.homeMode == HomeMode.PLAY || state.homeMode == HomeMode.EDIT
         currentBinding.keyboardPanel.visibility = keyboardVisible.toVisibility()
         currentBinding.playPanel.visibility = playVisible.toVisibility()
         currentBinding.editActionsPanel.visibility = (state.homeMode == HomeMode.EDIT).toVisibility()
+        currentBinding.progressLabel.visibility = playbackControlsVisible.toVisibility()
+        currentBinding.playbackProgress.visibility = playbackControlsVisible.toVisibility()
+        currentBinding.playPreviousButton.visibility = playbackControlsVisible.toVisibility()
+        currentBinding.playNextButton.visibility = playbackControlsVisible.toVisibility()
+        currentBinding.playSpeedButton.visibility = playbackControlsVisible.toVisibility()
+        currentBinding.playAutoButton.visibility = playbackControlsVisible.toVisibility()
+        currentBinding.playLoopButton.visibility = playbackControlsVisible.toVisibility()
+        currentBinding.playResetButton.visibility = playbackControlsVisible.toVisibility()
+        currentBinding.playClearButton.visibility = (state.homeMode == HomeMode.PLAY).toVisibility()
 
         val feedbackMessage = state.homeUiState.feedbackMessage
         if (feedbackMessage != null) {
@@ -243,6 +266,12 @@ class HomeFragment : Fragment() {
         currentBinding.moveGrid.removeAllViews()
         category.moves.forEach { token ->
             currentBinding.moveGrid.addView(createMoveButton(token))
+        }
+        repeat(MAX_GRID_SLOTS - category.moves.size) {
+            currentBinding.moveGrid.addView(createMoveButton("R").apply {
+                visibility = View.INVISIBLE
+                isClickable = false
+            })
         }
     }
 
@@ -295,7 +324,8 @@ class HomeFragment : Fragment() {
             .setMessage(R.string.home_reset_cube_message)
             .setNegativeButton(R.string.home_reset_cube_cancel, null)
             .setPositiveButton(R.string.home_reset_cube_confirm) { _, _ ->
-                binding?.cubeView?.resetRotation(sharedCubeViewModel.computeResetTargetQuaternion())
+                binding?.activeCubeView(sharedCubeViewModel.uiState.value.homeMode)
+                    ?.resetRotation(sharedCubeViewModel.computeResetTargetQuaternion())
                 sharedCubeViewModel.resetCurrentCubeToSolved()
             }
             .show()
@@ -315,8 +345,14 @@ class HomeFragment : Fragment() {
 
     private fun renderPlaybackControls(state: SharedCubeUiState) {
         val currentBinding = binding ?: return
-        val total = state.playbackState.sequence.moves.size
-        val index = state.playbackState.currentIndex.coerceIn(0, total)
+        val total = when (state.homeMode) {
+            HomeMode.EDIT -> state.editingSession.sequence.moves.size
+            else -> state.playbackState.sequence.moves.size
+        }
+        val index = when (state.homeMode) {
+            HomeMode.EDIT -> state.editingPlaybackIndex
+            else -> state.playbackState.currentIndex
+        }.coerceIn(0, total)
         currentBinding.progressLabel.text = getString(R.string.home_progress_format, index, total)
         currentBinding.playbackProgress.max = total.coerceAtLeast(1)
         currentBinding.playbackProgress.progress = index
@@ -504,7 +540,10 @@ class HomeFragment : Fragment() {
     private fun showToast(message: String, isError: Boolean = false) {
         val root = binding?.root as? ViewGroup ?: return
         dismissCurrentToast()
-        val bgColor = if (isError) 0xFFC62828.toInt() else 0xFF2E7D32.toInt()
+        val palette = AlgomixPalettes.from(
+            (requireActivity() as MainActivity).settingsViewModel.uiState.value.preferences.appAppearance,
+        )
+        val bgColor = if (isError) palette.error else palette.success
         val toastView = TextView(requireContext()).apply {
             text = message
             setTextColor(0xFFFFFFFF.toInt())
@@ -550,24 +589,30 @@ class HomeFragment : Fragment() {
 
     private fun applyHomeColors(appearance: AppAppearance) {
         val currentBinding = binding ?: return
-        val background = appearance.backgroundColor()
-        val surface = if (appearance == AppAppearance.DARK) DARK_SURFACE else LIGHT_SURFACE
-        val inputSurface = if (appearance == AppAppearance.DARK) DARK_INPUT_SURFACE else LIGHT_INPUT_SURFACE
-        val muted = if (appearance == AppAppearance.DARK) DARK_MUTED else LIGHT_MUTED
-        val title = if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_ORANGE
-        val newLabelColor = if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_BODY
+        val palette = AlgomixPalettes.from(appearance)
+        val newLabelColor = palette.body
         if (newLabelColor != moveLabelColor) {
             moveLabelColor = newLabelColor
             renderedKeyboardCategory = null
         }
-        currentBinding.root.setBackgroundColor(background)
-        currentBinding.cubeStage.setBackgroundColor(background)
-        currentBinding.playPanel.setBackgroundColor(surface)
-        currentBinding.sequenceText.setBackgroundColor(inputSurface)
-        currentBinding.appTitle.setTextColor(title)
-        currentBinding.sequenceText.setTextColor(if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_TITLE)
-        currentBinding.progressLabel.setTextColor(muted)
+        currentBinding.root.setBackgroundColor(palette.background)
+        currentBinding.cubeStage.setBackgroundColor(palette.background)
+        currentBinding.playPanel.setBackgroundColor(palette.surface)
+        currentBinding.sequenceText.setBackgroundColor(palette.inputSurface)
+        currentBinding.appTitle.setTextColor(palette.accent)
+        currentBinding.sequenceText.setTextColor(palette.title)
+        currentBinding.progressLabel.setTextColor(palette.muted)
     }
+
+    private fun FragmentHomeBinding.allCubeViews(): List<RubikCubeView> =
+        listOf(freeCubeView, playCubeView, editCubeView)
+
+    private fun FragmentHomeBinding.activeCubeView(mode: HomeMode): RubikCubeView =
+        when (mode) {
+            HomeMode.FREE -> freeCubeView
+            HomeMode.PLAY -> playCubeView
+            HomeMode.EDIT -> editCubeView
+        }
 
     private fun Int.toHomeMode(): HomeMode =
         when (this) {
@@ -599,9 +644,6 @@ class HomeFragment : Fragment() {
             MoveKeyboardCategory.WIDE_MOVES -> R.id.categoryWideMovesButton
         }
 
-    private fun HomeMode.quickActionsVisibility(): Int =
-        (this == HomeMode.FREE).toVisibility()
-
     private fun Boolean.toVisibility(): Int =
         if (this) View.VISIBLE else View.GONE
 
@@ -621,7 +663,7 @@ class HomeFragment : Fragment() {
         }
 
     private fun AppAppearance.backgroundColor(): Int =
-        if (this == AppAppearance.DARK) DARK_BACKGROUND else LIGHT_BACKGROUND
+        AlgomixPalettes.from(this).background
 
     private fun com.google.android.material.button.MaterialButtonToggleGroup.checkIfNeeded(
         buttonId: Int,
@@ -633,20 +675,9 @@ class HomeFragment : Fragment() {
 
     companion object {
         private const val MOVE_BUTTON_MARGIN = 3
+        private const val MAX_GRID_SLOTS = 18
         private const val NO_SELECTION = -1
         private const val TOAST_DURATION_MS = 2500L
-        private const val LIGHT_BACKGROUND = 0xFFF4F1EA.toInt()
-        private const val LIGHT_SURFACE = 0xFFFDF8F0.toInt()
-        private const val LIGHT_INPUT_SURFACE = 0xFFF7FBFF.toInt()
-        private const val LIGHT_TITLE = 0xFF1A1A1A.toInt()
-        private const val LIGHT_BODY = 0xFF212121.toInt()
-        private const val LIGHT_ORANGE = 0xFFE65100.toInt()
-        private const val LIGHT_MUTED = 0xFF4D5B75.toInt()
-        private const val DARK_BACKGROUND = 0xFF0D1117.toInt()
-        private const val DARK_SURFACE = 0xFF161B22.toInt()
-        private const val DARK_INPUT_SURFACE = 0xFF21262D.toInt()
-        private const val DARK_TEXT = 0xFFE6EDF3.toInt()
-        private const val DARK_MUTED = 0xFF8B949E.toInt()
     }
 
     private fun newId(): String = UUID.randomUUID().toString()
