@@ -16,9 +16,7 @@ Algomix est une application Android complète autour du Rubik's Cube. Elle combi
 
 ## Présentation
 
-Algomix est une application Android native Kotlin dédiée à la manipulation et à l'apprentissage du Rubik's Cube. Elle permet de visualiser un cube en 3D, d'exécuter des mouvements en notation Rubik, de jouer des séquences pas à pas, d'éditer des algorithmes, de gérer une bibliothèque locale, de chronométrer des solves et de synchroniser les données durables dans Supabase.
-
-L'interface est construite avec ViewBinding et des layouts XML Material3, avec un thème orange (#E65100) compact dérivé des maquettes du projet. La navigation entre Accueil, Bibliothèque, Timer et Paramètres se fait via un `MaterialBottomNavigationView` combiné à un `ViewPager2`. Les fragments gèrent les insets système via `WindowInsetsCompat` pour rester lisibles sans scroll inutile.
+Algomix est une application Android native Kotlin dédiée à la manipulation et à l'apprentissage du Rubik's Cube. Elle permet de visualiser un cube en 3D, d'exécuter des mouvements en notation Rubik, de jouer des séquences pas à pas, d'éditer des algorithmes, de gérer une bibliothèque locale, de chronométrer des solves et de synchroniser les données durables dans Supabase. L'interface est construite avec ViewBinding et des layouts XML.
 
 Le cube affiché à l'écran est rendu avec OpenGL ES. Les règles Rubik ne sont pas écrites dans le renderer: elles vivent dans le domaine métier. Ces règles couvrent le parsing des notations (`R`, `U'`, `Rw`, `M`, `x`), l'application des mouvements, les rotations globales, les wide moves, les slice moves, les scrambles, la validation du cube, le playback et l'édition de séquences.
 
@@ -28,7 +26,7 @@ Le domaine désigne ici la couche métier pure du projet. Elle contient les mod�
 
 DDD signifie Domain-Driven Design. Dans Algomix, cette approche sert à placer les règles importantes du Rubik et les données métier au centre du code, puis à brancher Android, Room, Supabase, CameraX ou OpenGL autour de ce noyau.
 
-Cette structure permet de remplacer Supabase par Firebase, Appwrite ou un backend maison, et CameraX par une autre solution de scan, sans réécrire le domaine ni les écrans. Les points de remplacement sont les ports applicatifs: ils décrivent ce que l'application attend, sans imposer une technologie précise.
+Cette structure permet de remplacer Supabase par Firebase, ou un backend maison, et CameraX par une autre solution de scan, sans réécrire le domaine ni les écrans. Les points de remplacement sont les ports applicatifs: ils décrivent ce que l'application attend, sans imposer une technologie précise.
 
 | Couche | Rôle dans Algomix | Exemples de classes |
 | --- | --- | --- |
@@ -215,5 +213,4 @@ L'état du cube est centralisé dans `SharedCubeViewModel`. La vue OpenGL ne pos
 | Tests instrumentés | Vérifications de navigation et d'état visibles via Espresso (à compléter au fil du temps). |
 
 Un smoke test est un contrôle manuel rapide après build. Il ne remplace pas les tests automatisés. Il sert à vérifier les points qui dépendent de l'appareil, des permissions, du rendu réel ou d'un backend distant: démarrage de l'application, rendu OpenGL non noir, caméra disponible, partage PDF Android, auth Supabase et synchronisation avec un vrai projet.
-
-Les documents versionnés sont dans `docs/`. Les sources Typst et maquettes de travail restent dans `Blueprint/`, ignoré par Git. Le smoke test manuel est décrit dans `docs/smoke-test-checklist.md`.
+Le smoke test manuel est décrit dans `docs/smoke-test-checklist.md`.
