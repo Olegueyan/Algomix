@@ -179,7 +179,7 @@ class TimerViewModel(
         )
     }
 
-    private suspend fun refreshHistory() {
+    suspend fun refreshHistory() {
         mutableUiState.value = mutableUiState.value.copy(isLoading = true)
         when (val result = timerRepository.listTimerEntries()) {
             is AppResult.Success -> {

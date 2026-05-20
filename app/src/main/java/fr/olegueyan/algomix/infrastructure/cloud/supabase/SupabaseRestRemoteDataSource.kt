@@ -120,10 +120,13 @@ class SupabaseRestRemoteDataSource(
 
     override suspend fun purgeRemoteOnly(deletedAt: Long): AppResult<Int> =
         networkResult {
-            val dataset = fetchDataset().getOrNull() ?: return@networkResult AppResult.failure(AppError.Network())
+            val datasetResult = fetchDataset()
+            val dataset = datasetResult.getOrNull()
+                ?: return@networkResult AppResult.failure(datasetResult.errorOrNull() ?: AppError.Network())
             val count = dataset.countActiveRows()
+            val owner = ownerId()
             PURGE_TABLES.forEach { table ->
-                val response = httpClient.patch(restUrl(table)) {
+                val response = httpClient.patch("${restUrl(table)}?owner_id=eq.$owner") {
                     authorizedHeaders()
                     contentType(ContentType.Application.Json)
                     setBody(tombstoneJson(deletedAt).toString())

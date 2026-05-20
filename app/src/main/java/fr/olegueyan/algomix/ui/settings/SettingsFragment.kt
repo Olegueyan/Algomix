@@ -28,6 +28,7 @@ import fr.olegueyan.algomix.domain.settings.AppAppearance
 import fr.olegueyan.algomix.domain.settings.CubeTheme
 import fr.olegueyan.algomix.ui.home.MainActivity
 import fr.olegueyan.algomix.ui.state.SettingsUiState
+import fr.olegueyan.algomix.ui.theme.AlgomixPalettes
 import fr.olegueyan.algomix.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 
@@ -162,7 +163,8 @@ class SettingsFragment : Fragment() {
         currentToastView?.let { rootView.removeView(it) }
         toastHandler.removeCallbacksAndMessages(null)
 
-        val background = if (isError) TOAST_ERROR else TOAST_SUCCESS
+        val palette = AlgomixPalettes.from(viewModel.uiState.value.preferences.appAppearance)
+        val background = if (isError) palette.error else palette.success
         val toast = TextView(requireContext()).apply {
             text = message
             setTextColor(Color.WHITE)
@@ -289,26 +291,22 @@ class SettingsFragment : Fragment() {
 
     private fun applySettingsColors(appearance: AppAppearance) {
         val currentBinding = binding ?: return
-        val background = if (appearance == AppAppearance.DARK) DARK_BACKGROUND else LIGHT_BACKGROUND
-        val surface = if (appearance == AppAppearance.DARK) DARK_SURFACE else LIGHT_SURFACE
-        val title = if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_ORANGE
-        val cardTitle = if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_TITLE
-        val muted = if (appearance == AppAppearance.DARK) DARK_MUTED else LIGHT_MUTED
-        currentBinding.settingsRoot.setBackgroundColor(background)
-        currentBinding.appearanceCard.setBackgroundColor(surface)
-        currentBinding.cubeThemeCard.setBackgroundColor(surface)
-        currentBinding.persistenceCard.setBackgroundColor(surface)
-        currentBinding.cloudCard.setBackgroundColor(surface)
-        currentBinding.profileCard.setBackgroundColor(surface)
-        currentBinding.settingsTitle.setTextColor(title)
-        applyCardTextColors(currentBinding.appearanceCard, cardTitle, muted)
-        applyCardTextColors(currentBinding.cubeThemeCard, cardTitle, muted)
-        applyCardTextColors(currentBinding.persistenceCard, cardTitle, muted)
-        applyCardTextColors(currentBinding.cloudCard, cardTitle, muted)
-        applyCardTextColors(currentBinding.profileCard, cardTitle, muted)
-        currentBinding.cloudStatus.setTextColor(muted)
-        currentBinding.profileName.setTextColor(cardTitle)
-        currentBinding.profileEmail.setTextColor(muted)
+        val palette = AlgomixPalettes.from(appearance)
+        currentBinding.settingsRoot.setBackgroundColor(palette.background)
+        currentBinding.appearanceCard.setBackgroundColor(palette.surface)
+        currentBinding.cubeThemeCard.setBackgroundColor(palette.surface)
+        currentBinding.persistenceCard.setBackgroundColor(palette.surface)
+        currentBinding.cloudCard.setBackgroundColor(palette.surface)
+        currentBinding.profileCard.setBackgroundColor(palette.surface)
+        currentBinding.settingsTitle.setTextColor(palette.accent)
+        applyCardTextColors(currentBinding.appearanceCard, palette.title, palette.muted)
+        applyCardTextColors(currentBinding.cubeThemeCard, palette.title, palette.muted)
+        applyCardTextColors(currentBinding.persistenceCard, palette.title, palette.muted)
+        applyCardTextColors(currentBinding.cloudCard, palette.title, palette.muted)
+        applyCardTextColors(currentBinding.profileCard, palette.title, palette.muted)
+        currentBinding.cloudStatus.setTextColor(palette.muted)
+        currentBinding.profileName.setTextColor(palette.title)
+        currentBinding.profileEmail.setTextColor(palette.muted)
     }
 
     private fun applyCardTextColors(view: View, title: Int, muted: Int) {
@@ -345,16 +343,5 @@ class SettingsFragment : Fragment() {
     }
 
     companion object {
-        private const val LIGHT_BACKGROUND = 0xFFF4F1EA.toInt()
-        private const val LIGHT_SURFACE = 0xFFFDF8F0.toInt()
-        private const val LIGHT_ORANGE = 0xFFE65100.toInt()
-        private const val LIGHT_TITLE = 0xFF003A5D.toInt()
-        private const val LIGHT_MUTED = 0xFF4D5B75.toInt()
-        private const val DARK_BACKGROUND = 0xFF0F172A.toInt()
-        private const val DARK_SURFACE = 0xFF1E293B.toInt()
-        private const val DARK_TEXT = 0xFFF8FAFC.toInt()
-        private const val DARK_MUTED = 0xFFCBD5E1.toInt()
-        private const val TOAST_SUCCESS = 0xFF2E7D32.toInt()
-        private const val TOAST_ERROR = 0xFFC62828.toInt()
     }
 }

@@ -35,7 +35,7 @@ internal suspend fun <T> networkResult(block: suspend () -> AppResult<T>): AppRe
     try {
         block()
     } catch (error: Exception) {
-        AppResult.failure(AppError.Network(cause = error))
+        AppResult.failure(AppError.Network(detail = error.message, cause = error))
     }
 
 internal suspend fun HttpResponse.requireSuccess(): AppResult<Unit> =

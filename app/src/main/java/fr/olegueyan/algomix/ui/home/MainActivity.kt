@@ -22,6 +22,7 @@ import fr.olegueyan.algomix.ui.library.LibraryFragment
 import fr.olegueyan.algomix.ui.settings.SettingsFragment
 import fr.olegueyan.algomix.ui.state.MainRoute
 import fr.olegueyan.algomix.ui.timer.TimerFragment
+import fr.olegueyan.algomix.ui.theme.AlgomixPalettes
 import fr.olegueyan.algomix.ui.viewmodel.SettingsViewModel
 import fr.olegueyan.algomix.ui.viewmodel.SharedCubeViewModel
 import kotlinx.coroutines.launch
@@ -164,22 +165,11 @@ class MainActivity : FragmentActivity(), AppContainerOwner {
     }
 
     private fun applyShellColors(appearance: AppAppearance) {
-        val background = if (appearance == AppAppearance.DARK) DARK_BACKGROUND else LIGHT_BACKGROUND
-        val surface = if (appearance == AppAppearance.DARK) DARK_SURFACE else LIGHT_SURFACE
-        val itemColor = if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_ORANGE
-        binding.main.setBackgroundColor(background)
-        binding.bottomNavigation.setBackgroundColor(surface)
-        val itemColors = ColorStateList.valueOf(itemColor)
+        val palette = AlgomixPalettes.from(appearance)
+        binding.main.setBackgroundColor(palette.background)
+        binding.bottomNavigation.setBackgroundColor(palette.surface)
+        val itemColors = ColorStateList.valueOf(palette.accent)
         binding.bottomNavigation.itemIconTintList = itemColors
         binding.bottomNavigation.itemTextColor = itemColors
-    }
-
-    companion object {
-        private const val LIGHT_BACKGROUND = 0xFFF4F1EA.toInt()
-        private const val LIGHT_SURFACE = 0xFFFDF8F0.toInt()
-        private const val LIGHT_ORANGE = 0xFFE65100.toInt()
-        private const val DARK_BACKGROUND = 0xFF0F172A.toInt()
-        private const val DARK_SURFACE = 0xFF1E293B.toInt()
-        private const val DARK_TEXT = 0xFFF8FAFC.toInt()
     }
 }

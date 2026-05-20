@@ -46,9 +46,9 @@ class SupabaseCloudSyncGateway(
 
     override suspend fun recover(): AppResult<SyncSummary> =
         syncResult {
-            val remote = remoteDataSource.fetchDataset().getOrReport() ?: return@syncResult AppResult.failure(
-                AppError.Network(),
-            )
+            val datasetResult = remoteDataSource.fetchDataset()
+            val remote = datasetResult.getOrNull()
+                ?: return@syncResult AppResult.failure(datasetResult.errorOrNull() ?: AppError.Network())
             val metadata = dao.listSyncMetadata().associateBy { it.key }
             var pulled = 0
             var conflicts = 0
@@ -141,9 +141,9 @@ class SupabaseCloudSyncGateway(
     override suspend fun purgeRemoteOnly(): AppResult<SyncSummary> =
         syncResult {
             val now = clockProvider.now().toEpochMilli()
-            val deleted = remoteDataSource.purgeRemoteOnly(now).getOrReport() ?: return@syncResult AppResult.failure(
-                AppError.Network(),
-            )
+            val purgeResult = remoteDataSource.purgeRemoteOnly(now)
+            val deleted = purgeResult.getOrNull()
+                ?: return@syncResult AppResult.failure(purgeResult.errorOrNull() ?: AppError.Network())
             dao.markAllCloudIneligible()
             dao.clearOutbox()
             AppResult.success(SyncSummary(deletedRemoteItems = deleted, completedAt = clockProvider.now()))
@@ -263,17 +263,11 @@ class SupabaseCloudSyncGateway(
             else -> Long.MIN_VALUE
         }
 
-    private suspend fun <T> AppResult<T>.getOrReport(): T? =
-        when (this) {
-            is AppResult.Success -> value
-            is AppResult.Failure -> null
-        }
-
     private suspend fun <T> syncResult(block: suspend () -> AppResult<T>): AppResult<T> =
         try {
             block()
         } catch (error: Exception) {
-            AppResult.failure(AppError.Network(cause = error))
+            AppResult.failure(AppError.Network(detail = error.message, cause = error))
         }
 
     private data class EntityDescriptor(

@@ -26,6 +26,7 @@ import fr.olegueyan.algomix.ui.home.SingleViewModelFactory
 import fr.olegueyan.algomix.ui.state.TimerDisplayEntry
 import fr.olegueyan.algomix.ui.state.TimerRunState
 import fr.olegueyan.algomix.ui.state.TimerUiState
+import fr.olegueyan.algomix.ui.theme.AlgomixPalettes
 import fr.olegueyan.algomix.ui.viewmodel.TimerViewModel
 import kotlinx.coroutines.launch
 
@@ -73,6 +74,13 @@ class TimerFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 (requireActivity() as MainActivity).settingsViewModel.uiState.collect { state ->
                     applyTimerColors(state.preferences.appAppearance)
+                }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                (requireActivity() as MainActivity).settingsViewModel.appRefreshEvents.collect {
+                    viewModel.refreshHistory()
                 }
             }
         }
@@ -145,27 +153,27 @@ class TimerFragment : Fragment() {
         TextView(requireContext()).apply {
             this.text = text
             textSize = TITLE_TEXT_SIZE
-            setTextColor(if (currentAppearance == AppAppearance.DARK) DARK_TEXT else LIGHT_TITLE)
+            setTextColor(AlgomixPalettes.from(currentAppearance).title)
         }
 
     private fun bodyText(text: String): TextView =
         TextView(requireContext()).apply {
             this.text = text
             textSize = BODY_TEXT_SIZE
-            setTextColor(if (currentAppearance == AppAppearance.DARK) DARK_MUTED else LIGHT_MUTED)
+            setTextColor(AlgomixPalettes.from(currentAppearance).muted)
         }
 
     private fun applyTimerColors(appearance: AppAppearance) {
         val currentBinding = binding ?: return
         currentAppearance = appearance
-        val background = if (appearance == AppAppearance.DARK) DARK_BACKGROUND else LIGHT_BACKGROUND
-        val titleColor = if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_ORANGE
-        val displayColor = if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_TITLE
-        val sectionTitle = if (appearance == AppAppearance.DARK) DARK_TEXT else 0xFF000000.toInt()
-        currentBinding.timerRoot.setBackgroundColor(background)
-        currentBinding.timerTitle.setTextColor(titleColor)
-        currentBinding.timerDisplay.setTextColor(displayColor)
-        currentBinding.historyTitle.setTextColor(sectionTitle)
+        val palette = AlgomixPalettes.from(appearance)
+        currentBinding.timerRoot.setBackgroundColor(palette.background)
+        currentBinding.chronoPanel.setBackgroundColor(palette.surface)
+        currentBinding.historyPanel.setBackgroundColor(palette.surface)
+        currentBinding.timerTitle.setTextColor(palette.accent)
+        currentBinding.timerDisplay.setTextColor(palette.title)
+        currentBinding.historyTitle.setTextColor(palette.title)
+        renderHistory(viewModel.uiState.value)
     }
 
     private fun showTimerToast(message: String, isError: Boolean) {
@@ -173,7 +181,8 @@ class TimerFragment : Fragment() {
         currentToastView?.let { rootView.removeView(it) }
         toastHandler.removeCallbacksAndMessages(null)
 
-        val bgColor = if (isError) TOAST_ERROR else TOAST_SUCCESS
+        val palette = AlgomixPalettes.from(currentAppearance)
+        val bgColor = if (isError) palette.error else palette.success
         val toast = TextView(requireContext()).apply {
             text = message
             setTextColor(Color.WHITE)
@@ -207,14 +216,5 @@ class TimerFragment : Fragment() {
     companion object {
         private const val TITLE_TEXT_SIZE = 18f
         private const val BODY_TEXT_SIZE = 13f
-        private const val LIGHT_BACKGROUND = 0xFFF4F1EA.toInt()
-        private const val LIGHT_ORANGE = 0xFFE65100.toInt()
-        private const val LIGHT_TITLE = 0xFF1A1A1A.toInt()
-        private const val LIGHT_MUTED = 0xFF4D5B75.toInt()
-        private const val DARK_BACKGROUND = 0xFF0D1117.toInt()
-        private const val DARK_TEXT = 0xFFE6EDF3.toInt()
-        private const val DARK_MUTED = 0xFF8B949E.toInt()
-        private const val TOAST_SUCCESS = 0xFF2E7D32.toInt()
-        private const val TOAST_ERROR = 0xFFC62828.toInt()
     }
 }

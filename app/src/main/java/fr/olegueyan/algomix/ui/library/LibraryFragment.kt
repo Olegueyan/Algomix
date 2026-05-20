@@ -33,6 +33,7 @@ import fr.olegueyan.algomix.ui.state.LibraryCollectionSection
 import fr.olegueyan.algomix.ui.state.LibraryItemType
 import fr.olegueyan.algomix.ui.state.LibraryScreen
 import fr.olegueyan.algomix.ui.state.LibraryUiState
+import fr.olegueyan.algomix.ui.theme.AlgomixPalettes
 import fr.olegueyan.algomix.ui.viewmodel.LibraryViewModel
 import kotlinx.coroutines.launch
 import java.io.File
@@ -81,6 +82,13 @@ class LibraryFragment : Fragment() {
                 }
             }
         }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                (requireActivity() as MainActivity).settingsViewModel.appRefreshEvents.collect {
+                    viewModel.refresh()
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
@@ -126,7 +134,10 @@ class LibraryFragment : Fragment() {
         val feedbackMessage = state.feedback?.message ?: getString(R.string.library_loading).takeIf { state.isLoading }
         currentBinding.libraryFeedback.text = feedbackMessage.orEmpty()
         currentBinding.libraryFeedback.visibility = (feedbackMessage != null).toVisibility()
-        currentBinding.libraryFeedback.setTextColor(if (state.feedback?.isError == true) ERROR_COLOR else INFO_COLOR)
+        val palette = AlgomixPalettes.from(currentAppearance)
+        currentBinding.libraryFeedback.setTextColor(
+            if (state.feedback?.isError == true) palette.error else palette.accent,
+        )
         currentBinding.scrambleCodeText.text = state.draftScrambleSequence.ifBlank {
             getString(R.string.library_empty)
         }
@@ -380,37 +391,31 @@ class LibraryFragment : Fragment() {
     private fun applyLibraryColors(appearance: AppAppearance) {
         val currentBinding = binding ?: return
         currentAppearance = appearance
-        val background = if (appearance == AppAppearance.DARK) DARK_BACKGROUND else LIGHT_BACKGROUND
-        val titleColor = if (appearance == AppAppearance.DARK) DARK_TEXT else LIGHT_ORANGE
-        currentBinding.libraryRoot.setBackgroundColor(background)
-        currentBinding.libraryTitle.setTextColor(titleColor)
+        val palette = AlgomixPalettes.from(appearance)
+        currentBinding.libraryRoot.setBackgroundColor(palette.background)
+        currentBinding.libraryTitle.setTextColor(palette.accent)
     }
 
     private fun verticalPanel(compact: Boolean = false): LinearLayout =
         LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(PANEL_PADDING, PANEL_PADDING, PANEL_PADDING, PANEL_PADDING)
-            setBackgroundColor(
-                if (currentAppearance == AppAppearance.DARK) {
-                    if (compact) DARK_COMPACT_PANEL else DARK_PANEL
-                } else {
-                    if (compact) COMPACT_PANEL_COLOR else PANEL_COLOR
-                },
-            )
+            val palette = AlgomixPalettes.from(currentAppearance)
+            setBackgroundColor(if (compact) palette.compactSurface else palette.surface)
         }
 
     private fun titleText(text: String): TextView =
         TextView(requireContext()).apply {
             this.text = text
             textSize = TITLE_TEXT_SIZE
-            setTextColor(if (currentAppearance == AppAppearance.DARK) DARK_TEXT else LIGHT_TITLE)
+            setTextColor(AlgomixPalettes.from(currentAppearance).title)
         }
 
     private fun bodyText(text: String): TextView =
         TextView(requireContext()).apply {
             this.text = text
             textSize = BODY_TEXT_SIZE
-            setTextColor(if (currentAppearance == AppAppearance.DARK) DARK_MUTED else BODY_COLOR)
+            setTextColor(AlgomixPalettes.from(currentAppearance).muted)
         }
 
     private fun rowButton(labelResId: Int, onClick: () -> Unit): MaterialButton =
@@ -477,18 +482,5 @@ class LibraryFragment : Fragment() {
         private const val PANEL_PADDING = 12
         private const val TITLE_TEXT_SIZE = 17f
         private const val BODY_TEXT_SIZE = 13f
-        private const val LIGHT_BACKGROUND = 0xFFF4F1EA.toInt()
-        private const val LIGHT_ORANGE = 0xFFE65100.toInt()
-        private const val LIGHT_TITLE = 0xFF000000.toInt()
-        private const val BODY_COLOR = 0xFF4D5B75.toInt()
-        private const val INFO_COLOR = 0xFF8A3B00.toInt()
-        private const val ERROR_COLOR = 0xFFB00020.toInt()
-        private const val PANEL_COLOR = 0xFFFFFDF8.toInt()
-        private const val COMPACT_PANEL_COLOR = 0xFFF7FBFF.toInt()
-        private const val DARK_BACKGROUND = 0xFF0D1117.toInt()
-        private const val DARK_PANEL = 0xFF161B22.toInt()
-        private const val DARK_COMPACT_PANEL = 0xFF21262D.toInt()
-        private const val DARK_TEXT = 0xFFE6EDF3.toInt()
-        private const val DARK_MUTED = 0xFF8B949E.toInt()
     }
 }

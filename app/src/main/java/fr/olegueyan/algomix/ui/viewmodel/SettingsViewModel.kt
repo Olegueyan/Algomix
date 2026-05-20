@@ -12,7 +12,10 @@ import fr.olegueyan.algomix.domain.settings.AppAppearance
 import fr.olegueyan.algomix.domain.settings.CubeTheme
 import fr.olegueyan.algomix.domain.settings.UserPreferences
 import fr.olegueyan.algomix.ui.state.SettingsUiState
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -27,6 +30,8 @@ class SettingsViewModel(
 ) : ViewModel() {
     private val mutableUiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = mutableUiState.asStateFlow()
+    private val mutableAppRefreshEvents = MutableSharedFlow<Unit>(extraBufferCapacity = REFRESH_EVENT_BUFFER)
+    val appRefreshEvents: SharedFlow<Unit> = mutableAppRefreshEvents.asSharedFlow()
 
     init {
         launchTask {
@@ -177,10 +182,12 @@ class SettingsViewModel(
                     else -> {
                         val pushed = (pushResult as AppResult.Success).value.pushedItems
                         val pulled = (pullResult as AppResult.Success).value.pulledItems
+                        loadPreferences()
                         mutableUiState.value = mutableUiState.value.copy(
                             feedbackMessage = "Sync terminé: $pushed envoyés, $pulled reçus",
                             isError = false,
                         )
+                        mutableAppRefreshEvents.tryEmit(Unit)
                     }
                 }
             } finally {
@@ -200,14 +207,25 @@ class SettingsViewModel(
             when (val result = gateway.purgeRemoteOnly()) {
                 is AppResult.Success -> mutableUiState.value = mutableUiState.value.copy(
                     isSyncing = false,
-                    feedbackMessage = "Cloud vidé: ${result.value.deletedRemoteItems} éléments supprimés",
+                    feedbackMessage = "Cloud vidé: ${result.value.deletedRemoteItems} suppressions",
                     isError = false,
-                )
+                ).also { mutableAppRefreshEvents.tryEmit(Unit) }
                 is AppResult.Failure -> {
                     mutableUiState.value = mutableUiState.value.copy(isSyncing = false)
                     setError(result.error)
                 }
             }
+        }
+    }
+
+    fun recoverCloud() {
+        syncCloud()
+    }
+
+    fun refreshVisibleData() {
+        launchTask {
+            loadPreferences()
+            refreshSession()
         }
     }
 
@@ -276,5 +294,9 @@ class SettingsViewModel(
         } else {
             viewModelScope.launch { block() }
         }
+    }
+
+    private companion object {
+        const val REFRESH_EVENT_BUFFER = 8
     }
 }
